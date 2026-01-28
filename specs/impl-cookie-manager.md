@@ -30,3 +30,5 @@
       Drift Detection).
 - [x] Update README with CLI examples and documented exit codes (Spec: CLI Commands, Output &
       Logging).
+
+Status: Complete as of 2026-01-28.
