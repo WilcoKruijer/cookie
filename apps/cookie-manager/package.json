@@ -10,6 +10,13 @@
     "dev": "tsx src/cli.ts --help",
     "build": "tsc -p tsconfig.json",
     "types:check": "tsc -p tsconfig.json --noEmit",
-    "lint": "oxlint src"
+    "lint": "oxlint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }

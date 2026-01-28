@@ -1,13 +1,8 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-type ProjectConfig = {
-  name: string;
-  path: string;
-  features: Record<string, string>;
-};
+import { loadProjects } from "./config.js";
 
 type ParsedArgs = {
   command: string | null;
@@ -122,20 +117,6 @@ function parseArgs(args: string[]): ParsedArgs {
   }
 
   return { command, positionals, flags };
-}
-
-function loadProjects(configDir: string): ProjectConfig[] {
-  const projectsDir = join(configDir, "projects");
-  if (!existsSync(projectsDir)) {
-    return [];
-  }
-
-  const entries = readdirSync(projectsDir)
-    .filter((name: string) => name.endsWith(".json"))
-    .map((name: string) => join(projectsDir, name))
-    .filter((file: string) => statSync(file).isFile());
-
-  return entries.map((file: string) => JSON.parse(readFileSync(file, "utf8")) as ProjectConfig);
 }
 
 function findRepoRoot(start: string): string | null {
