@@ -14,13 +14,13 @@
       optional diffs (Spec: CLI Commands, Output & Logging).
 - [x] Implement version matching checks that identify when a file matches another feature version
       and include that in `status` output (Spec: Drift Detection).
-- [ ] Implement `sync` command with `--dry-run` default, `--apply`, and `--diff` support (Spec: Sync
+- [x] Implement `sync` command with `--dry-run` default, `--apply`, and `--diff` support (Spec: Sync
       / Update Behavior).
-- [ ] Implement merge strategies (`none`, `markers`, `keep-local`, `overwrite`) for sync conflicts
+- [x] Implement merge strategies (`none`, `markers`, `keep-local`, `overwrite`) for sync conflicts
       (Spec: Merge strategies).
-- [ ] Use a standard three-way merge tool (e.g., `git merge-file`) for sync updates (Spec: Sync /
+- [x] Use a standard three-way merge tool (e.g., `git merge-file`) for sync updates (Spec: Sync /
       Update Behavior).
-- [ ] Ensure sync is atomic per project by validating all changes before writing any files (Spec:
+- [x] Ensure sync is atomic per project by validating all changes before writing any files (Spec:
       Sync / Update Behavior).
 - [x] Implement conflict detection across features and surface actionable errors (Spec: Conflict
       Handling).

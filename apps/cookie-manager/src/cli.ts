@@ -5,6 +5,13 @@ import { fileURLToPath } from "node:url";
 import { loadProjects } from "./config.js";
 import { collectMarkdownReport } from "./collect.js";
 import { collectStatusReport, type ProjectStatus } from "./status.js";
+import {
+  applySyncReport,
+  collectSyncReport,
+  type MergeStrategy,
+  type SyncProjectReport,
+  type SyncReport,
+} from "./sync.js";
 
 type ParsedArgs = {
   command: string | null;
@@ -107,6 +114,54 @@ switch (parsed.command) {
     console.log(markdown);
     process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
   }
+  case "sync": {
+    const projectFlag = parsed.flags.project;
+    if (projectFlag === true) {
+      console.error("Missing project name for --project.");
+      process.exit(2);
+    }
+    const projectName = typeof projectFlag === "string" ? projectFlag : undefined;
+    if (parsed.flags.apply && parsed.flags["dry-run"]) {
+      console.error("Use either --apply or --dry-run, not both.");
+      process.exit(2);
+    }
+    const mergeFlag = parsed.flags.merge;
+    if (mergeFlag === true) {
+      console.error("Missing strategy for --merge.");
+      process.exit(2);
+    }
+    const mergeStrategy = parseMergeStrategy(mergeFlag);
+    if (!mergeStrategy) {
+      console.error(`Invalid merge strategy: ${mergeFlag}`);
+      process.exit(2);
+    }
+
+    let report: SyncReport;
+    try {
+      report = collectSyncReport({
+        repoRoot,
+        configRoot,
+        projectName,
+        includeDiffs: Boolean(parsed.flags.diff),
+        mergeStrategy,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+      process.exit(2);
+    }
+
+    printSyncReport(report, Boolean(parsed.flags.diff));
+
+    if (parsed.flags.apply) {
+      applySyncReport(report);
+    }
+
+    const hasErrors = report.projects.some((project) => project.errors.length > 0);
+    const exitCode =
+      report.hasConflicts || hasErrors || (!parsed.flags.apply && report.hasChanges) ? 1 : 0;
+    process.exit(exitCode);
+  }
   default: {
     console.error(`Unknown command: ${parsed.command}`);
     printHelp();
@@ -122,6 +177,7 @@ Commands:
   show <name>        Print a project configuration
   status             Show drift and conflicts
   collect            Report drift as Markdown
+  sync               Sync project files from templates
   help               Show this help
 
 Options:
@@ -129,6 +185,9 @@ Options:
   --json             Print JSON output where available
   --project NAME     Limit status/sync/collect to a single project
   --diff             Include diffs for mismatched/missing files
+  --apply            Write changes during sync (default: dry-run)
+  --dry-run          Show planned sync changes without writing
+  --merge STRATEGY   Merge strategy: none, markers, keep-local, overwrite
   --strict           Fail on any warning-level status
   --help             Show help
 `);
@@ -211,4 +270,70 @@ function printProjectStatus(project: ProjectStatus): void {
     }
   }
   console.log("");
+}
+
+function printSyncReport(report: SyncReport, includeDiffs: boolean): void {
+  for (const project of report.projects) {
+    printProjectSync(project, includeDiffs);
+  }
+}
+
+function printProjectSync(project: SyncProjectReport, includeDiffs: boolean): void {
+  console.log(`${project.name} (${project.path})`);
+
+  if (project.conflicts.length > 0) {
+    console.log("  Conflicts:");
+    for (const conflict of project.conflicts) {
+      const owners = conflict.owners ? ` ${conflict.owners.join(", ")}` : "";
+      const detail = conflict.detail ? ` (${conflict.detail})` : "";
+      const resolution = conflict.resolution ? ` [${conflict.resolution}]` : "";
+      console.log(`    - ${conflict.path} [${conflict.type}]${owners}${detail}${resolution}`);
+    }
+  }
+
+  if (project.errors.length > 0) {
+    console.log("  Errors:");
+    for (const error of project.errors) {
+      console.log(`    - ${error}`);
+    }
+  }
+
+  if (project.actions.length === 0) {
+    if (project.conflicts.length === 0 && project.errors.length === 0) {
+      console.log("  No changes to apply.");
+    }
+    console.log("");
+    return;
+  }
+
+  console.log("  Changes:");
+  for (const action of project.actions) {
+    if (action.kind === "write") {
+      console.log(`    - write ${action.path} (${action.source})`);
+      if (includeDiffs && action.diff) {
+        console.log("");
+        console.log(`Diff for ${action.path}:`);
+        console.log("```diff");
+        console.log(action.diff.trimEnd());
+        console.log("```");
+      }
+      continue;
+    }
+    if (action.kind === "delete") {
+      console.log(`    - delete ${action.path}`);
+      continue;
+    }
+    console.log(`    - rename ${action.from} -> ${action.to}`);
+  }
+  console.log("");
+}
+
+function parseMergeStrategy(flag: string | boolean | undefined): MergeStrategy | null {
+  if (!flag || flag === true) {
+    return "none";
+  }
+  if (flag === "none" || flag === "markers" || flag === "keep-local" || flag === "overwrite") {
+    return flag;
+  }
+  return null;
 }

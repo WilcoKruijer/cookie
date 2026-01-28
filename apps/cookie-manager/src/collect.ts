@@ -1,7 +1,5 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeatures, loadProjects } from "./config.js";
 import {
@@ -12,6 +10,7 @@ import {
 } from "./status.js";
 import { loadJsonMergeFragments, mergeJsonFragments, type JsonObject } from "./merge.js";
 import { resolveFeatureTemplates } from "./templates.js";
+import { createUnifiedDiff } from "./diff.js";
 
 export function collectMarkdownReport(options: {
   repoRoot: string;
@@ -266,43 +265,6 @@ function isPlainObject(value: unknown): value is JsonObject {
 
 function stringifyJson(value: JsonObject): string {
   return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-function createUnifiedDiff(expected: string, actual: string): string | null {
-  const tempDir = mkdtempSync(join(tmpdir(), "cookie-manager-diff-"));
-  const expectedPath = join(tempDir, "expected");
-  const actualPath = join(tempDir, "actual");
-
-  try {
-    writeFileSync(expectedPath, expected, "utf8");
-    writeFileSync(actualPath, actual, "utf8");
-    const diff =
-      runDiffCommand("diff", ["-u", expectedPath, actualPath]) ??
-      runDiffCommand("git", [
-        "diff",
-        "--no-index",
-        "--no-color",
-        "--",
-        expectedPath,
-        actualPath,
-      ]);
-
-    if (!diff || diff.trim().length === 0) {
-      return null;
-    }
-
-    return diff;
-  } finally {
-    rmSync(tempDir, { recursive: true, force: true });
-  }
-}
-
-function runDiffCommand(command: string, args: string[]): string | null {
-  const result = spawnSync(command, args, { encoding: "utf8" });
-  if (result.error) {
-    return null;
-  }
-  return typeof result.stdout === "string" ? result.stdout : null;
 }
 
 function featureKey(feature: FeatureDefinition): string {
