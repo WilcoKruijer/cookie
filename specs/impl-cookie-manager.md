@@ -10,7 +10,7 @@
       (Spec: Project Config Schema, Feature Definition Schema).
 - [x] Implement `status` command to report missing/mismatch/conflict states per project (Spec: Drift
       Detection, Conflict Handling, CLI Commands).
-- [ ] Implement `collect` command to emit a Markdown report with per-project drift summaries and
+- [x] Implement `collect` command to emit a Markdown report with per-project drift summaries and
       optional diffs (Spec: CLI Commands, Output & Logging).
 - [x] Implement version matching checks that identify when a file matches another feature version
       and include that in `status` output (Spec: Drift Detection).

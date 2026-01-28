@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadProjects } from "./config.js";
+import { collectMarkdownReport } from "./collect.js";
 import { collectStatusReport, type ProjectStatus } from "./status.js";
 
 type ParsedArgs = {
@@ -81,6 +82,31 @@ switch (parsed.command) {
     }
     process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
   }
+  case "collect": {
+    const projectFlag = parsed.flags.project;
+    if (projectFlag === true) {
+      console.error("Missing project name for --project.");
+      process.exit(2);
+    }
+    const projectName = typeof projectFlag === "string" ? projectFlag : undefined;
+    let report;
+    try {
+      report = collectStatusReport({ repoRoot, configRoot, projectName });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+      process.exit(2);
+    }
+    const markdown = collectMarkdownReport({
+      repoRoot,
+      configRoot,
+      projectName,
+      includeDiffs: Boolean(parsed.flags.diff),
+      report,
+    });
+    console.log(markdown);
+    process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
+  }
   default: {
     console.error(`Unknown command: ${parsed.command}`);
     printHelp();
@@ -95,12 +121,14 @@ Commands:
   projects           List configured projects
   show <name>        Print a project configuration
   status             Show drift and conflicts
+  collect            Report drift as Markdown
   help               Show this help
 
 Options:
   --config-root PATH Override the config directory (default: ./config)
   --json             Print JSON output where available
   --project NAME     Limit status/sync/collect to a single project
+  --diff             Include diffs for mismatched/missing files
   --strict           Fail on any warning-level status
   --help             Show help
 `);
