@@ -24,9 +24,9 @@
       Sync / Update Behavior).
 - [x] Implement conflict detection across features and surface actionable errors (Spec: Conflict
       Handling).
-- [ ] Implement `explain` command to show feature ownership and drift reasons (Spec: CLI Commands).
+- [x] Implement `explain` command to show feature ownership and drift reasons (Spec: CLI Commands).
 - [x] Add `--json` output mode for `projects` and `status` (Spec: Output & Logging).
-- [ ] Add unit tests for config parsing, drift detection, and diff output (Spec: Output & Logging,
+- [x] Add unit tests for config parsing, drift detection, and diff output (Spec: Output & Logging,
       Drift Detection).
 - [ ] Update README with CLI examples and documented exit codes (Spec: CLI Commands, Output &
       Logging).

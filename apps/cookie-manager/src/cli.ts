@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadProjects } from "./config.js";
 import { collectMarkdownReport } from "./collect.js";
+import { collectExplainReport, type ExplainReport } from "./explain.js";
 import { collectStatusReport, type ProjectStatus } from "./status.js";
 import {
   applySyncReport,
@@ -88,6 +89,37 @@ switch (parsed.command) {
       printProjectStatus(project);
     }
     process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
+  }
+  case "explain": {
+    const name = parsed.positionals[0];
+    const filePath = parsed.positionals[1];
+    if (!name) {
+      console.error("Missing project name.");
+      process.exit(1);
+    }
+    if (!filePath) {
+      console.error("Missing file path.");
+      process.exit(1);
+    }
+    let report;
+    try {
+      report = collectExplainReport({
+        repoRoot,
+        configRoot,
+        projectName: name,
+        filePath,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+      process.exit(2);
+    }
+    printExplainReport(report);
+    const exitCode =
+      report.status === "missing" || report.status === "mismatch" || report.status === "conflict"
+        ? 1
+        : 0;
+    process.exit(exitCode);
   }
   case "collect": {
     const projectFlag = parsed.flags.project;
@@ -176,6 +208,7 @@ Commands:
   projects           List configured projects
   show <name>        Print a project configuration
   status             Show drift and conflicts
+  explain <name> <file> Show ownership and drift reasons for a file
   collect            Report drift as Markdown
   sync               Sync project files from templates
   help               Show this help
@@ -268,6 +301,65 @@ function printProjectStatus(project: ProjectStatus): void {
       const detail = entry.detail ? ` (${entry.detail})` : "";
       console.log(`    - ${entry.path} (${entry.feature})${matches}${detail}`);
     }
+  }
+  console.log("");
+}
+
+function printExplainReport(report: ExplainReport): void {
+  console.log(`${report.project.name} (${report.project.path})`);
+  console.log(`File: ${report.path}`);
+  console.log(`Owners: ${report.owners.length > 0 ? report.owners.join(", ") : "unmanaged"}`);
+
+  if (report.ownershipType !== "unknown") {
+    const label =
+      report.ownershipType === "json-merge"
+        ? "json-merge"
+        : report.ownershipType === "rule"
+          ? "required"
+          : "template";
+    console.log(`Ownership type: ${label}`);
+  }
+
+  if (report.status === "conflict") {
+    console.log("Status: conflict");
+    for (const conflict of report.conflicts) {
+      const detail = conflict.detail ? ` (${conflict.detail})` : "";
+      console.log(
+        `  - ${conflict.path} [${conflict.type}] ${conflict.owners.join(", ")}${detail}`,
+      );
+    }
+    console.log("");
+    return;
+  }
+
+  if (report.status === "missing") {
+    const detail = report.detail ? ` (${report.detail})` : "";
+    console.log(`Status: missing${detail}`);
+    console.log("");
+    return;
+  }
+
+  if (report.status === "mismatch") {
+    const matches = report.matches ? ` matches ${report.matches}` : "";
+    const detail = report.detail ? ` (${report.detail})` : "";
+    console.log(`Status: mismatch${matches}${detail}`);
+    console.log("");
+    return;
+  }
+
+  if (report.status === "unmanaged") {
+    const note = report.fileExists ? "file exists" : "file missing";
+    console.log(`Status: unmanaged (${note})`);
+    console.log("");
+    return;
+  }
+
+  if (report.ownershipType === "json-merge") {
+    console.log("Status: ok (matches merged JSON)");
+  } else if (report.ownershipType === "rule") {
+    console.log("Status: ok (required file exists)");
+  } else {
+    console.log("Status: ok (matches template)");
   }
   console.log("");
 }
