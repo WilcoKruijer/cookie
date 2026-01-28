@@ -28,5 +28,5 @@
 - [x] Add `--json` output mode for `projects` and `status` (Spec: Output & Logging).
 - [x] Add unit tests for config parsing, drift detection, and diff output (Spec: Output & Logging,
       Drift Detection).
-- [ ] Update README with CLI examples and documented exit codes (Spec: CLI Commands, Output &
+- [x] Update README with CLI examples and documented exit codes (Spec: CLI Commands, Output &
       Logging).
