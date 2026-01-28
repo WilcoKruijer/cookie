@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadProjects } from "./config.js";
+import { collectStatusReport, type ProjectStatus } from "./status.js";
 
 type ParsedArgs = {
   command: string | null;
@@ -53,19 +54,32 @@ switch (parsed.command) {
     break;
   }
   case "status": {
-    const projects = loadProjects(configRoot);
-    if (projects.length === 0) {
+    const projectFlag = parsed.flags.project;
+    if (projectFlag === true) {
+      console.error("Missing project name for --project.");
+      process.exit(2);
+    }
+    const projectName = typeof projectFlag === "string" ? projectFlag : undefined;
+    let report;
+    try {
+      report = collectStatusReport({ repoRoot, configRoot, projectName });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+      process.exit(2);
+    }
+    if (report.projects.length === 0) {
       console.log("No projects configured.");
-      break;
+      process.exit(0);
     }
-    for (const project of projects) {
-      const featureList = Object.entries(project.features)
-        .map(([domain, version]) => `${domain}@${version}`)
-        .join(", ");
-      console.log(`${project.name}: ${featureList}`);
+    if (parsed.flags.json) {
+      console.log(JSON.stringify(report, null, 2));
+      process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
     }
-    console.log("\nStatus details are not implemented yet.");
-    break;
+    for (const project of report.projects) {
+      printProjectStatus(project);
+    }
+    process.exit(report.hasConflicts || report.hasDrift ? 1 : 0);
   }
   default: {
     console.error(`Unknown command: ${parsed.command}`);
@@ -80,12 +94,14 @@ function printHelp(): void {
 Commands:
   projects           List configured projects
   show <name>        Print a project configuration
-  status             Show feature selections (detail coming soon)
+  status             Show drift and conflicts
   help               Show this help
 
 Options:
   --config-root PATH Override the config directory (default: ./config)
   --json             Print JSON output where available
+  --project NAME     Limit status/sync/collect to a single project
+  --strict           Fail on any warning-level status
   --help             Show help
 `);
 }
@@ -133,4 +149,38 @@ function findRepoRoot(start: string): string | null {
     }
     current = parent;
   }
+}
+
+function printProjectStatus(project: ProjectStatus): void {
+  console.log(`${project.name} (${project.path})`);
+  if (project.ok) {
+    console.log("  No drift or conflicts detected.");
+    console.log("");
+    return;
+  }
+  if (project.conflicts.length > 0) {
+    console.log("  Conflicts:");
+    for (const conflict of project.conflicts) {
+      const detail = conflict.detail ? ` (${conflict.detail})` : "";
+      console.log(
+        `    - ${conflict.path} [${conflict.type}] ${conflict.owners.join(", ")}${detail}`,
+      );
+    }
+  }
+  if (project.missing.length > 0) {
+    console.log("  Missing:");
+    for (const entry of project.missing) {
+      const detail = entry.detail ? ` (${entry.detail})` : "";
+      console.log(`    - ${entry.path} (${entry.feature})${detail}`);
+    }
+  }
+  if (project.mismatches.length > 0) {
+    console.log("  Mismatch:");
+    for (const entry of project.mismatches) {
+      const matches = entry.matches ? ` matches ${entry.matches}` : "";
+      const detail = entry.detail ? ` (${entry.detail})` : "";
+      console.log(`    - ${entry.path} (${entry.feature})${matches}${detail}`);
+    }
+  }
+  console.log("");
 }
