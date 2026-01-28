@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
+import { join } from "node:path";
 import type { FeatureDefinition } from "./config.js";
+import { applyTemplateVars, resolveTemplateRoot } from "./templates.js";
 
 export type JsonValue =
   | null
@@ -38,6 +39,7 @@ export type JsonMergeFile = {
 export function loadJsonMergeFragments(
   repoRoot: string,
   features: FeatureDefinition[],
+  templateVars?: Record<string, string>,
 ): JsonMergeFile[] {
   const files = new Map<string, JsonFragment[]>();
 
@@ -46,9 +48,7 @@ export function loadJsonMergeFragments(
     if (jsonFiles.length === 0) {
       continue;
     }
-    const templateRoot = isAbsolute(feature.templateRoot)
-      ? feature.templateRoot
-      : join(repoRoot, feature.templateRoot);
+    const templateRoot = resolveTemplateRoot(repoRoot, feature);
 
     for (const filePath of jsonFiles) {
       const fragmentPath = join(templateRoot, filePath);
@@ -57,7 +57,7 @@ export function loadJsonMergeFragments(
           `Missing JSON merge fragment for ${feature.domain}@${feature.version}: ${fragmentPath}`,
         );
       }
-      const fragment = readJsonObject(fragmentPath);
+      const fragment = readJsonObject(fragmentPath, templateVars);
       const list = files.get(filePath) ?? [];
       list.push({
         source: `${feature.domain}@${feature.version}`,
@@ -189,10 +189,11 @@ function deepEqual(a: JsonValue, b: JsonValue): boolean {
   return false;
 }
 
-function readJsonObject(filePath: string): JsonObject {
+function readJsonObject(filePath: string, templateVars?: Record<string, string>): JsonObject {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(readFileSync(filePath, "utf8")) as unknown;
+    const content = applyTemplateVars(readFileSync(filePath, "utf8"), templateVars);
+    parsed = JSON.parse(content) as unknown;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Invalid JSON in ${filePath}: ${message}`);

@@ -4,9 +4,9 @@
       validation (Spec: Project Config Schema, Feature Definition Schema).
 - [x] Support feature-level JSON contributions to `package.json` with a deterministic merge strategy
       and conflict reporting (Spec: Feature Definition Schema, Conflict Handling).
-- [ ] Add template resolution helpers that map `feature.json` to `files/` content and apply
+- [x] Add template resolution helpers that map `feature.json` to `files/` content and apply
       rename/delete metadata (Spec: Feature Definition Schema, Drift Detection).
-- [ ] Allow feature files to include template strings that resolve from per-project config values
+- [x] Allow feature files to include template strings that resolve from per-project config values
       (Spec: Project Config Schema, Feature Definition Schema).
 - [ ] Implement `status` command to report missing/mismatch/conflict states per project (Spec: Drift
       Detection, Conflict Handling, CLI Commands).
