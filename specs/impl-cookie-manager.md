@@ -2,7 +2,7 @@
 
 - [x] Implement config loaders for `config/projects` and `config/features` with Zod schema
       validation (Spec: Project Config Schema, Feature Definition Schema).
-- [ ] Support feature-level JSON contributions to `package.json` with a deterministic merge strategy
+- [x] Support feature-level JSON contributions to `package.json` with a deterministic merge strategy
       and conflict reporting (Spec: Feature Definition Schema, Conflict Handling).
 - [ ] Add template resolution helpers that map `feature.json` to `files/` content and apply
       rename/delete metadata (Spec: Feature Definition Schema, Drift Detection).
