@@ -1,0 +1,13 @@
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: false
+  piped: true
+  jobs:
+    - name: lint
+      run: pnpm exec oxlint --fix {staged_files}
+    - name: prettier
+      run:
+        sh -c 'pnpm exec prettier --ignore-unknown --check {staged_files}; code=$?; pnpm exec
+        prettier --ignore-unknown --write {staged_files}; exit $code'

@@ -1,0 +1,9 @@
+{
+  "domain": "ai",
+  "version": "1.0.0",
+  "description": "AI agent instructions and command templates.",
+  "templateRoot": "config/features/ai/1.0.0/files",
+  "files": ["CLAUDE.md", ".claude/commands/chore-commit.md", ".claude/commands/skill-frontend.md"],
+  "changes": {},
+  "fileRules": {}
+}

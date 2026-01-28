@@ -1,0 +1,15 @@
+{
+  "name": "@cookie-dev/cookie-manager",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "cookie-manager": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts --help",
+    "build": "tsc -p tsconfig.json",
+    "types:check": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint src"
+  }
+}

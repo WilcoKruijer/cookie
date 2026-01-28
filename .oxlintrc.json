@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn"],
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.turbo/**", "**/build/**"],
+  "rules": {
+    "no-const-assign": "error",
+    "no-dupe-keys": "error",
+    "no-empty": "error",
+    "no-irregular-whitespace": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "error",
+    "curly": "error",
+    "unicorn/empty-brace-spaces": "error"
+  }
+}

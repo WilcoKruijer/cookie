@@ -1,0 +1,9 @@
+{
+  "domain": "lint",
+  "version": "1.0.0",
+  "description": "Linting and formatting configuration.",
+  "templateRoot": "config/features/lint/1.0.0/files",
+  "files": [".oxlintrc.json", ".prettierignore", "prettier.config.mjs"],
+  "changes": {},
+  "fileRules": {}
+}
