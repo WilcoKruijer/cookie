@@ -43,7 +43,9 @@ export function collectCheckReport(options: {
   lines.push(`- Generated: ${new Date().toISOString()}`);
   lines.push(
     `- Projects: ${
-      selectedProjects.length > 0 ? selectedProjects.map((project) => project.name).join(", ") : "none"
+      selectedProjects.length > 0
+        ? selectedProjects.map((project) => project.name).join(", ")
+        : "none"
     }`,
   );
   lines.push("");
@@ -73,32 +75,37 @@ export function collectCheckReport(options: {
         ? readFileSync(projectFilePath, "utf8")
         : MISSING_MARKER;
 
-      const language = languageTag(filePath);
-
       lines.push(`### ${filePath}`);
-      lines.push("```" + language);
-      lines.push(projectContent);
-      lines.push("```", "");
-
       if (includeDiffs) {
         const renderedTemplate = renderTemplate({
           templateContents,
           filePath,
           project,
         });
-        lines.push("Rendered Diff:");
-        lines.push("```diff");
-        lines.push(
-          createTwoFilesPatch(
-            `template/${filePath}`,
-            `project/${filePath}`,
-            renderedTemplate,
-            projectContent,
-            "",
-            "",
-            { context: 3 },
-          ).trimEnd(),
-        );
+        if (renderedTemplate === MISSING_MARKER || projectContent === MISSING_MARKER) {
+          lines.push("**File is missing**", "");
+        } else if (renderedTemplate === projectContent) {
+          lines.push("_files are identical_", "");
+        } else {
+          lines.push("Rendered Diff:");
+          lines.push("```diff");
+          lines.push(
+            createTwoFilesPatch(
+              `template/${filePath}`,
+              `project/${filePath}`,
+              renderedTemplate,
+              projectContent,
+              "",
+              "",
+              { context: 3 },
+            ).trimEnd(),
+          );
+          lines.push("```", "");
+        }
+      } else {
+        const language = languageTag(filePath);
+        lines.push("```" + language);
+        lines.push(projectContent);
         lines.push("```", "");
       }
     }
@@ -149,7 +156,9 @@ function languageTag(filePath: string): string {
 }
 
 function buildPrompt(featureName: string, includeDiffs: boolean): string {
-  const diffNote = includeDiffs ? "- Per-project diffs between rendered templates and files.\n" : "";
+  const diffNote = includeDiffs
+    ? "- Per-project diffs between rendered templates and files.\n"
+    : "";
 
   return `You are reviewing drift for the feature "${featureName}", defined as part of the Cookie 
 Manager.

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { marked } from "marked";
 // @ts-expect-error - marked-terminal types are outdated for v7
 import { markedTerminal } from "marked-terminal";
 import { collectCheckReport } from "./check.js";
-import { loadProjects } from "./config.js";
+import { loadFeatures, loadProjects } from "./config.js";
 
 type ParsedArgs = {
   command: string | null;
@@ -41,6 +41,32 @@ export function run(argv: string[] = process.argv.slice(2)): void {
       }
       for (const project of projects) {
         console.log(project.name);
+      }
+      break;
+    }
+    case "features": {
+      const features = loadFeatures(configRoot).map((feature) => {
+        const readmePath = join(configRoot, "features", feature.name, "README.md");
+        const readme = existsSync(readmePath) ? readFileSync(readmePath, "utf8") : null;
+        return { ...feature, readme };
+      });
+      if (parsed.flags.json) {
+        console.log(JSON.stringify(features, null, 2));
+        break;
+      }
+      for (const feature of features) {
+        console.log(feature.name);
+        console.log(`  ${feature.description}`);
+        console.log(`  files: ${feature.files.join(", ") || "none"}`);
+        if (feature.readme) {
+          console.log("  readme:");
+          for (const line of feature.readme.trimEnd().split("\n")) {
+            console.log(`    ${line}`);
+          }
+        } else {
+          console.log("  readme: (missing)");
+        }
+        console.log("");
       }
       break;
     }
@@ -121,6 +147,7 @@ function printHelp(): void {
 
 Commands:
   check              Generate the drift report for a feature
+  features           List configured features (includes README content)
   projects           List configured projects
   show <name>        Print a project configuration
   help               Show this help

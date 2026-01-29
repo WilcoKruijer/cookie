@@ -8,8 +8,8 @@
 - `projects` and `show` are optional informational commands; they do not alter any state.
 - Feature templates are 1:1 file snapshots. There are no merge fragments, renames, deletes, or
   special file types.
-- Feature membership is declared in each project config. `check` only inspects projects that
-  declare the feature (unless a `--project` filter is used).
+- Feature membership is declared in each project config. `check` only inspects projects that declare
+  the feature (unless a `--project` filter is used).
 - Template placeholders are supported via simple string substitution using per-project
   `templateVars`. Missing template vars are fatal errors.
 - Missing template files are reported in the Markdown report and should be added to the feature.
@@ -17,8 +17,8 @@
 
 ## Goals
 
-- Provide a single CLI command to collect feature template files and the corresponding project
-  files across all configured projects.
+- Provide a single CLI command to collect feature template files and the corresponding project files
+  across all configured projects.
 - Emit a Markdown report that is human-readable and ready for LLM review.
 - Include an embedded LLM prompt that instructs an LLM to assess drift and suggest updates for both
   templates and projects.
@@ -56,19 +56,14 @@ Each feature is defined by `feature.json` and a `files/` directory of template f
 {
   "name": "lint",
   "description": "Linting and formatting configuration.",
-  "files": [
-    ".prettierignore",
-    "prettier.config.mjs",
-    "lefthook.yml"
-  ]
+  "files": [".prettierignore", "prettier.config.mjs", "lefthook.yml"]
 }
 ```
 
 Rules:
 
 - `files` are repo-root-relative paths.
-- For each `files` entry, the template file must exist at
-  `config/features/<feature>/files/<path>`.
+- For each `files` entry, the template file must exist at `config/features/<feature>/files/<path>`.
 - The order of `files` is preserved in the report.
 
 ## Project Config Schema
@@ -146,15 +141,15 @@ Template file blocks:
 
 - Each template file subsection includes:
   - The file path.
-  - The raw template content (as stored in this repo), or a clear `MISSING` marker if the
-    template file is absent.
+  - The raw template content (as stored in this repo), or a clear `MISSING` marker if the template
+    file is absent.
 
 Project file blocks:
 
 - Each project section includes, for each feature file in order:
   - The file path.
-  - The rendered template content for that project (or a clear `MISSING` marker if the template
-    file is absent).
+  - The rendered template content for that project (or a clear `MISSING` marker if the template file
+    is absent).
   - The project file content (or a clear `MISSING` marker if not present).
 
 Code fences:

@@ -164,6 +164,7 @@ describe("collectCheckReport", () => {
     expect(report).toContain("```diff");
     expect(report).toContain("-alpha");
     expect(report).toContain("+beta");
+    expect(report).not.toContain("```text\nbeta\n```");
   });
 
   it("shows the feature README at the top and not in the LLM prompt", () => {
@@ -213,5 +214,90 @@ describe("collectCheckReport", () => {
     expect(featureIndex).toBeGreaterThan(readmeIndex);
     expect(report).toContain("lint readme");
     expect(report.lastIndexOf("lint readme")).toBeLessThan(promptIndex);
+  });
+
+  it("notes identical files when diffs are enabled", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "lint", "files", "alpha.txt"), "alpha\n");
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: join(configRoot, "..", "alpha"),
+          features: ["lint"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "..", "alpha", "alpha.txt"), "alpha\n");
+
+    const report = collectCheckReport({
+      configRoot,
+      featureName: "lint",
+      includeDiffs: true,
+    });
+
+    expect(report).toContain("_files are identical_");
+  });
+
+  it("shows missing file marker in diff mode", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "lint", "files", "alpha.txt"), "alpha\n");
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: join(configRoot, "..", "alpha"),
+          features: ["lint"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    mkdirSync(join(configRoot, "..", "alpha"), { recursive: true });
+
+    const report = collectCheckReport({
+      configRoot,
+      featureName: "lint",
+      includeDiffs: true,
+    });
+
+    expect(report).toContain("**File is missing**");
+    expect(report).not.toContain("```diff");
   });
 });
