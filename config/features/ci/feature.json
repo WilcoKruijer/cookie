@@ -1,0 +1,5 @@
+{
+  "name": "ci",
+  "description": "GitHub Actions CI and release workflows.",
+  "files": [".github/workflows/ci.yml", ".github/workflows/release.yml"]
+}

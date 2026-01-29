@@ -1,4 +1,5 @@
 {
   "name": "thalo",
-  "path": "/Users/wilco/dev/thalo"
+  "path": "/Users/wilco/dev/thalo",
+  "features": ["changeset", "ci", "lint", "monorepo", "ai"]
 }

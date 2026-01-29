@@ -1,9 +1,0 @@
-{
-  "domain": "monorepo",
-  "version": "1.0.0",
-  "description": "pnpm workspace and Turborepo baseline.",
-  "templateRoot": "config/features/monorepo/1.0.0/files",
-  "files": ["package.json", "pnpm-workspace.yaml", "turbo.json"],
-  "changes": {},
-  "fileRules": {}
-}

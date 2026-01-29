@@ -1,9 +1,0 @@
-{
-  "domain": "changeset",
-  "version": "1.0.0",
-  "description": "Changesets configuration and README.",
-  "templateRoot": "config/features/changeset/1.0.0/files",
-  "files": [".changeset/config.json", ".changeset/README.md"],
-  "changes": {},
-  "fileRules": {}
-}

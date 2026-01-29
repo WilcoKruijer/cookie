@@ -7,55 +7,15 @@ const projectConfigSchema = z
     name: z.string(),
     path: z.string(),
     templateVars: z.record(z.string(), z.string()).optional(),
-    features: z.record(z.string(), z.string()).optional().default({}),
-  })
-  .strict();
-
-const featureChangeSchema = z
-  .object({
-    renames: z.record(z.string(), z.string()).optional(),
-    deletes: z.array(z.string()).optional(),
-  })
-  .strict();
-
-const featureRuleSchema = z
-  .object({
-    require: z.enum(["exists"]),
-  })
-  .strict();
-
-const featureMergeSchema = z
-  .object({
-    json: z.array(z.string()),
+    features: z.array(z.string()),
   })
   .strict();
 
 const featureDefinitionSchema = z
   .object({
-    domain: z.string(),
-    version: z.string(),
+    name: z.string(),
     description: z.string(),
-    templateRoot: z.string(),
     files: z.array(z.string()),
-    templateFiles: z.array(z.string()).optional(),
-    changes: z.record(z.string(), featureChangeSchema).optional(),
-    fileRules: z.record(z.string(), featureRuleSchema).optional(),
-    fileMerge: featureMergeSchema.optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.templateFiles) {
-      return;
-    }
-    const fileSet = new Set(value.files);
-    for (const path of value.templateFiles) {
-      if (fileSet.has(path)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `templateFiles must not overlap files: ${path}`,
-          path: ["templateFiles"],
-        });
-      }
-    }
   })
   .strict();
 
@@ -89,38 +49,36 @@ export function loadFeatures(configDir: string): FeatureDefinition[] {
     return [];
   }
 
-  const domains = readdirSync(featuresDir)
+  const featureDirs = readdirSync(featuresDir)
     .map((name: string) => join(featuresDir, name))
     .filter((dir: string) => statSync(dir).isDirectory());
 
-  const features: FeatureDefinition[] = [];
-  for (const domainDir of domains) {
-    const domainName = basename(domainDir);
-    const versions = readdirSync(domainDir)
-      .map((name: string) => join(domainDir, name))
-      .filter((dir: string) => statSync(dir).isDirectory());
-
-    for (const versionDir of versions) {
-      const versionName = basename(versionDir);
-      const featurePath = join(versionDir, "feature.json");
-      if (!existsSync(featurePath)) {
-        continue;
-      }
-      const data = readJsonFile(featurePath);
-      const parsed = featureDefinitionSchema.safeParse(data);
-      if (!parsed.success) {
-        throw new Error(formatZodError(featurePath, parsed.error));
-      }
-      if (parsed.data.domain !== domainName || parsed.data.version !== versionName) {
-        throw new Error(
-          `Feature definition mismatch in ${featurePath}: expected ${domainName}@${versionName}, got ${parsed.data.domain}@${parsed.data.version}.`,
-        );
-      }
-      features.push(parsed.data);
+  return featureDirs.flatMap((featureDir) => {
+    const featureName = basename(featureDir);
+    const featurePath = join(featureDir, "feature.json");
+    if (!existsSync(featurePath)) {
+      return [];
     }
-  }
+    const data = readJsonFile(featurePath);
+    const parsed = featureDefinitionSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error(formatZodError(featurePath, parsed.error));
+    }
+    if (parsed.data.name !== featureName) {
+      throw new Error(
+        `Feature definition mismatch in ${featurePath}: expected ${featureName}, got ${parsed.data.name}.`,
+      );
+    }
+    return [parsed.data];
+  });
+}
 
-  return features;
+export function loadFeature(configDir: string, name: string): FeatureDefinition {
+  const feature = loadFeatures(configDir).find((entry) => entry.name === name);
+  if (!feature) {
+    throw new Error(`Feature not found: ${name}`);
+  }
+  return feature;
 }
 
 function readJsonFile(filePath: string): unknown {

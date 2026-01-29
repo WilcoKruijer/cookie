@@ -1,0 +1,5 @@
+{
+  "name": "lint",
+  "description": "Linting, formatting, and pre-commit configuration.",
+  "files": [".oxlintrc.json", "lefthook.yml", "prettier.config.mjs", ".prettierignore"]
+}

@@ -19,27 +19,14 @@ pnpm exec tsx apps/cookie-manager/src/cli.ts projects
 # Show a single project config
 pnpm exec tsx apps/cookie-manager/src/cli.ts show fragno
 
-# Check drift across all projects (human-readable)
-pnpm exec tsx apps/cookie-manager/src/cli.ts status
+# Generate a drift report for one feature across all projects
+pnpm exec tsx apps/cookie-manager/src/cli.ts check --feature lint
 
-# Check drift for one project (JSON output)
-pnpm exec tsx apps/cookie-manager/src/cli.ts status --project fragno --json
-
-# Preview sync changes with diffs
-pnpm exec tsx apps/cookie-manager/src/cli.ts sync --project fragno --diff
-
-# Apply sync changes (writes files)
-pnpm exec tsx apps/cookie-manager/src/cli.ts sync --project fragno --apply
-
-# Explain why a file is out of sync
-pnpm exec tsx apps/cookie-manager/src/cli.ts explain fragno .github/workflows/ci.yml
-
-# Collect drift report (Markdown)
-pnpm exec tsx apps/cookie-manager/src/cli.ts collect --diff
+# Limit the report to one project and write to a file
+pnpm exec tsx apps/cookie-manager/src/cli.ts check --feature lint --project fragno --output report.md
 ```
 
 ## Exit codes
 
-- `0`: no drift or successful sync
-- `1`: drift or conflicts found
-- `2`: fatal error (invalid config, missing templates)
+- `0`: report generated successfully
+- `2`: fatal error (invalid config, missing template vars)

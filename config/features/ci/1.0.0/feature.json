@@ -1,9 +1,0 @@
-{
-  "domain": "ci",
-  "version": "1.0.0",
-  "description": "GitHub Actions CI and release workflows.",
-  "templateRoot": "config/features/ci/1.0.0/files",
-  "files": [".github/workflows/ci.yml", ".github/workflows/release.yml"],
-  "changes": {},
-  "fileRules": {}
-}

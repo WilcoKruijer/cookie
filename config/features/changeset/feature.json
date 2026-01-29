@@ -1,0 +1,5 @@
+{
+  "name": "changeset",
+  "description": "Changesets configuration and README.",
+  "files": [".changeset/config.json", ".changeset/README.md"]
+}

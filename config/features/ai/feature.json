@@ -1,0 +1,5 @@
+{
+  "name": "ai",
+  "description": "AI agent instructions and command templates.",
+  "files": ["CLAUDE.md", ".claude/commands/chore-commit.md", ".claude/commands/skill-frontend.md"]
+}

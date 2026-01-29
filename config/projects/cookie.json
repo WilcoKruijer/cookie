@@ -1,4 +1,5 @@
 {
   "name": "cookie",
-  "path": "/Users/wilco/dev/cookie"
+  "path": "/Users/wilco/dev/cookie",
+  "features": ["changeset", "ci", "lint", "monorepo", "ai"]
 }
