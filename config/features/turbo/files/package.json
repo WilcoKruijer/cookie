@@ -18,13 +18,14 @@
     "dev": "turbo watch --ui tui dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "format:changed": "prettier -u --write $(git ls-files --others --exclude-standard && git diff --name-only --diff-filter=d HEAD | sort -u | xargs)",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "build": "turbo run build --output-logs=errors-only",
     "types:check": "turbo run types:check --output-logs=errors-only",
     "test": "turbo run test --output-logs=errors-only",
     "prepare": "lefthook install",
-    "ci:version": "changeset version && pnpm install",
+    "ci:version": "changeset version && pnpm update && pnpm install && pnpm run format:changed",
     "ci:publish": "changeset publish && changeset tag"
   }
 }
