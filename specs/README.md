@@ -65,3 +65,5 @@ very detailed, living documents that guide implementation without constraining t
 ## Implementation Plans
 
 - [Cookie Manager — Implementation Plan](./impl-cookie-manager.md) — Initial CLI and config system.
+- [Cookie Manager — Check-Only Implementation Plan](./impl-cookie-manager-check.md) — Read-only
+  `check` workflow and report generation.
