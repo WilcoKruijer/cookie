@@ -47,6 +47,8 @@ configured projects.
 
 - Keep feature templates and project configs aligned unless drift is explicitly intended and
   documented.
+- When adding new template files under `config/features/<feature>/files`, always add the matching
+  path to `config/features/<feature>/feature.json` in the same change.
 - If you change how a feature is checked, update the prompt logic/tests in `apps/cookie-manager/src`
   as needed.
 - Prefer small, focused changes; avoid editing unrelated files.

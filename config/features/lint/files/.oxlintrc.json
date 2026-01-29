@@ -21,6 +21,7 @@
     ],
     "@typescript-eslint/no-explicit-any": "error",
     "curly": "error",
-    "unicorn/empty-brace-spaces": "error"
+    "unicorn/empty-brace-spaces": "error",
+    "unicorn/number-literal-case": "off"
   }
 }

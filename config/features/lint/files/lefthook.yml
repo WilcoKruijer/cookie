@@ -11,3 +11,8 @@ pre-commit:
       run:
         sh -c 'pnpm exec prettier --ignore-unknown --check {staged_files}; code=$?; pnpm exec
         prettier --ignore-unknown --write {staged_files}; exit $code'
+
+commit-msg:
+  commands:
+    "Check commit message format":
+      run: scripts/commit-msg {1}

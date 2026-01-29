@@ -186,12 +186,14 @@ Task:
    - Summary
    - Suggested Template Updates (grouped by file path)
    - Suggested Project Updates (grouped by project, then file path)
-8. If a template file is missing, recommend what content should be added.
-9. If a project file is missing, recommend whether it should be created from the template or
-   removed from the feature.
+8. DECIDE for each drifted file (missing in template, missing in project, or has changes) whether
+   the best fix is to update the template, update one or more projects, or both.
 
-Do not edit files directly. Provide recommendations only.
-Output ONLY the suggestion-report in Markdown. Do not include any other commentary or preamble.
+Rules:
+  - Do not edit files directly. Provide recommendations only.
+  - Output ONLY the suggestion-report in Markdown. Do not include any other commentary or preamble.
+  - NEVER add a suggestion based on a file to both template and project suggested updates.
+  - A file MAY have multiple suggested updates
 
 Example output:
 \`\`\`markdown
