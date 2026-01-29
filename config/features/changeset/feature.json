@@ -1,5 +1,5 @@
 {
   "name": "changeset",
-  "description": "Changesets configuration.",
-  "files": [".changeset/config.json"]
+  "description": "Changesets configuration and release workflow.",
+  "files": [".changeset/config.json", ".github/workflows/release.yml"]
 }

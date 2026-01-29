@@ -1,7 +1,7 @@
 # Cookie
 
 Cookie is a monorepo that houses the Cookie Manager CLI. The CLI enforces standard setup across
-related repos by feature domain (changeset, ci, lint, monorepo, lefthook, ai).
+related repos by feature domain (changeset, lint, turbo, lefthook, ai).
 
 ## Quick start
 

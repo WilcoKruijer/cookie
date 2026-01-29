@@ -180,12 +180,14 @@ Task:
 2. Decide whether the best fix is to update the template, update one or more projects, or both.
 3. Propose template updates when multiple projects share improvements or the template is outdated.
 4. Propose project updates when a project should align with the template.
-5. Present all suggestions in clear Markdown with sections:
+5. Each change should be suggested in exactly one place: either as a template update OR as a project update, never both.
+6. Number every suggestion so the user can respond with "apply X,Y,Z".
+7. Present all suggestions in clear Markdown with sections:
    - Summary
    - Suggested Template Updates (grouped by file path)
    - Suggested Project Updates (grouped by project, then file path)
-6. If a template file is missing, recommend what content should be added.
-7. If a project file is missing, recommend whether it should be created from the template or
+8. If a template file is missing, recommend what content should be added.
+9. If a project file is missing, recommend whether it should be created from the template or
    removed from the feature.
 
 Do not edit files directly. Provide recommendations only.
@@ -200,12 +202,14 @@ Example output:
 
 ## Suggested Template Updates
 ### path/to/template.file
-- ...
+- 1. ...
+- 2. ...
 
 ## Suggested Project Updates
 ### project-name
 #### path/to/project.file
-- ...
+- 3. ...
+- 4. ...
 \`\`\``;
 }
 

@@ -35,7 +35,7 @@
 
 ## Terminology
 
-- **Feature**: A named bundle of repo setup files (e.g., `lint`, `ci`, `changeset`).
+- **Feature**: A named bundle of repo setup files (e.g., `lint`, `turbo`, `changeset`).
 - **Template**: Canonical file content stored in this repo for a feature.
 - **Project**: A repo on disk that declares which features it uses.
 - **Report**: The Markdown output produced by `check` containing templates, project files, and an
@@ -79,7 +79,7 @@ Project configs live in `config/projects/*.json`.
     "repoName": "fragno",
     "packageScope": "@wilco"
   },
-  "features": ["changeset", "ci", "lint", "monorepo", "lefthook", "ai"]
+  "features": ["changeset", "lint", "turbo", "lefthook", "ai"]
 }
 ```
 

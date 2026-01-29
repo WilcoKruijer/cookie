@@ -1,5 +1,5 @@
 {
   "name": "kc",
   "path": "/Users/wilco/dev/kc",
-  "features": ["ci", "lint", "monorepo", "ai"]
+  "features": ["lint", "turbo", "ai"]
 }

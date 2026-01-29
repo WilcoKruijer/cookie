@@ -17,8 +17,8 @@ configured projects.
 ## Repo overview
 
 - Cookie is a monorepo containing the Cookie Manager CLI.
-- The CLI enforces standard setup across related repos by feature domain (changeset, ci, lint,
-  monorepo, lefthook, ai).
+- The CLI enforces standard setup across related repos by feature domain (changeset, lint, turbo,
+  lefthook, ai).
 
 ## Key paths
 

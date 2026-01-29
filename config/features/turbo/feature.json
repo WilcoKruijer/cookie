@@ -1,0 +1,5 @@
+{
+  "name": "turbo",
+  "description": "pnpm workspace and Turborepo baseline.",
+  "files": [".github/workflows/ci.yml", "package.json", "pnpm-workspace.yaml", "turbo.json"]
+}

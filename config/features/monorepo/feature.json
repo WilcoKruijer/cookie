@@ -1,5 +1,0 @@
-{
-  "name": "monorepo",
-  "description": "pnpm workspace and Turborepo baseline.",
-  "files": ["package.json", "pnpm-workspace.yaml", "turbo.json"]
-}
