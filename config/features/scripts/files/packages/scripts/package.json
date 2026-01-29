@@ -1,0 +1,32 @@
+{
+  "name": "{{NPM_SCOPE}}/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./src/mod.ts",
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
+    }
+  },
+  "main": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "scripts": {
+    "dev": "tsx src/mod.ts",
+    "dev:watch": "tsx watch src/mod.ts",
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
+    "types:check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "devDependencies": {
+    "{{NPM_SCOPE}}/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

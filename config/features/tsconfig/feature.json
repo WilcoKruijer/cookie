@@ -1,0 +1,8 @@
+{
+  "name": "tsconfig",
+  "description": "Shared TypeScript base config package.",
+  "files": [
+    "packages/typescript-config/package.json",
+    "packages/typescript-config/tsconfig.base.json"
+  ]
+}

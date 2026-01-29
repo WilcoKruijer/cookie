@@ -1,0 +1,11 @@
+{
+  "name": "scripts",
+  "description": "Shared scripts package.",
+  "files": [
+    "packages/scripts/package.json",
+    "packages/scripts/tsconfig.json",
+    "packages/scripts/tsdown.config.ts",
+    "packages/scripts/vitest.config.ts",
+    "packages/scripts/src/mod.ts"
+  ]
+}
