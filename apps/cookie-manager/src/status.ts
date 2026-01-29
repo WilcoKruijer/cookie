@@ -131,6 +131,16 @@ function buildProjectStatus(options: {
       }
     }
 
+    for (const path of feature.templateFiles ?? []) {
+      if (conflictPaths.has(path)) {
+        continue;
+      }
+      const filePath = join(project.path, path);
+      if (!existsSync(filePath)) {
+        missing.push({ path, feature: owner, kind: "missing" });
+      }
+    }
+
     if (feature.fileRules) {
       for (const [path, rule] of Object.entries(feature.fileRules)) {
         if (rule.require !== "exists") {
@@ -192,6 +202,9 @@ function detectOwnershipConflicts(features: FeatureDefinition[]): StatusConflict
   for (const feature of features) {
     const owner = featureKey(feature);
     for (const path of feature.files) {
+      addOwner(owners, path, owner);
+    }
+    for (const path of feature.templateFiles ?? []) {
       addOwner(owners, path, owner);
     }
     if (feature.fileRules) {
@@ -318,9 +331,7 @@ function loadTemplateFile(
   const templateRoot = resolveTemplateRoot(repoRoot, feature);
   const templatePath = join(templateRoot, filePath);
   if (!existsSync(templatePath)) {
-    throw new Error(
-      `Missing template for ${feature.domain}@${feature.version}: ${templatePath}`,
-    );
+    throw new Error(`Missing template for ${feature.domain}@${feature.version}: ${templatePath}`);
   }
   return applyTemplateVars(readFileSync(templatePath, "utf8"), templateVars);
 }
@@ -347,9 +358,7 @@ function addOwner(owners: Map<string, string[]>, path: string, owner: string): v
   owners.set(path, [owner]);
 }
 
-function groupFeaturesByDomain(
-  features: FeatureDefinition[],
-): Map<string, FeatureDefinition[]> {
+function groupFeaturesByDomain(features: FeatureDefinition[]): Map<string, FeatureDefinition[]> {
   const map = new Map<string, FeatureDefinition[]>();
   for (const feature of features) {
     const list = map.get(feature.domain) ?? [];

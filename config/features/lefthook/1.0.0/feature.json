@@ -1,9 +1,0 @@
-{
-  "domain": "lefthook",
-  "version": "1.0.0",
-  "description": "Lefthook configuration for pre-commit checks.",
-  "templateRoot": "config/features/lefthook/1.0.0/files",
-  "files": ["lefthook.yml"],
-  "changes": {},
-  "fileRules": {}
-}

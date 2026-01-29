@@ -14,7 +14,12 @@ import { dirname, join } from "node:path";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeatures, loadProjects } from "./config.js";
 import { loadJsonMergeFragments, mergeJsonFragments, type JsonObject } from "./merge.js";
-import { applyTemplateVars, resolveFeatureTemplates, resolveTemplateRoot } from "./templates.js";
+import {
+  applyTemplateVars,
+  loadTemplateFiles,
+  resolveFeatureTemplates,
+  resolveTemplateRoot,
+} from "./templates.js";
 import { createUnifiedDiff } from "./diff.js";
 
 export type MergeStrategy = "none" | "markers" | "keep-local" | "overwrite";
@@ -60,13 +65,7 @@ export function collectSyncReport(options: {
   includeDiffs?: boolean;
   mergeStrategy?: MergeStrategy;
 }): SyncReport {
-  const {
-    repoRoot,
-    configRoot,
-    projectName,
-    includeDiffs,
-    mergeStrategy = "none",
-  } = options;
+  const { repoRoot, configRoot, projectName, includeDiffs, mergeStrategy = "none" } = options;
   const projects = loadProjects(configRoot);
   const features = loadFeatures(configRoot);
   const featureMap = new Map(features.map((feature) => [featureKey(feature), feature]));
@@ -228,12 +227,7 @@ function buildProjectSyncReport(options: {
         featureByDomain,
       });
       if (baseFeature) {
-        const base = loadTemplateFile(
-          repoRoot,
-          baseFeature,
-          template.path,
-          project.templateVars,
-        );
+        const base = loadTemplateFile(repoRoot, baseFeature, template.path, project.templateVars);
         const merged = runThreeWayMerge(base, actual, template.content);
         if (merged.conflict) {
           const resolution = resolveMergeConflict(mergeStrategy, {
@@ -290,6 +284,30 @@ function buildProjectSyncReport(options: {
           includeDiffs,
         }),
       );
+    }
+
+    const templateOnly = loadTemplateFiles({
+      repoRoot,
+      feature,
+      paths: feature.templateFiles ?? [],
+      templateVars: project.templateVars,
+    });
+    for (const template of templateOnly) {
+      if (conflictPaths.has(template.path) || mergePaths.has(template.path)) {
+        continue;
+      }
+      const filePath = join(project.path, template.path);
+      if (!existsSync(filePath)) {
+        actions.push(
+          buildWriteAction({
+            path: template.path,
+            content: template.content,
+            source: owner,
+            actual: "",
+            includeDiffs,
+          }),
+        );
+      }
     }
 
     applyRenameActions({
@@ -441,7 +459,11 @@ function resolveMergeConflict(
   }
 }
 
-function runThreeWayMerge(base: string, local: string, remote: string): {
+function runThreeWayMerge(
+  base: string,
+  local: string,
+  remote: string,
+): {
   content: string;
   conflict: boolean;
 } {
@@ -492,6 +514,9 @@ function detectOwnershipConflicts(features: FeatureDefinition[]): SyncConflict[]
   for (const feature of features) {
     const owner = featureKey(feature);
     for (const path of feature.files) {
+      addOwner(owners, path, owner);
+    }
+    for (const path of feature.templateFiles ?? []) {
       addOwner(owners, path, owner);
     }
     if (feature.fileRules) {
@@ -570,9 +595,7 @@ function loadTemplateFile(
   const templateRoot = resolveTemplateRoot(repoRoot, feature);
   const templatePath = join(templateRoot, filePath);
   if (!existsSync(templatePath)) {
-    throw new Error(
-      `Missing template for ${feature.domain}@${feature.version}: ${templatePath}`,
-    );
+    throw new Error(`Missing template for ${feature.domain}@${feature.version}: ${templatePath}`);
   }
   return applyTemplateVars(readFileSync(templatePath, "utf8"), templateVars);
 }
@@ -599,9 +622,7 @@ function addOwner(owners: Map<string, string[]>, path: string, owner: string): v
   owners.set(path, [owner]);
 }
 
-function groupFeaturesByDomain(
-  features: FeatureDefinition[],
-): Map<string, FeatureDefinition[]> {
+function groupFeaturesByDomain(features: FeatureDefinition[]): Map<string, FeatureDefinition[]> {
   const map = new Map<string, FeatureDefinition[]>();
   for (const feature of features) {
     const list = map.get(feature.domain) ?? [];

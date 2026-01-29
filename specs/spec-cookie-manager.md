@@ -66,7 +66,8 @@ validated with Zod.
       "deletes": ["deprecated.json"]
     }
   },
-  "files": [".oxlintrc.json", ".prettierignore", "prettier.config.mjs"],
+  "files": [".oxlintrc.json", ".prettierignore"],
+  "templateFiles": ["prettier.config.mjs"],
   "fileRules": {
     "scripts/commit-msg": {
       "require": "exists"
@@ -84,6 +85,10 @@ Rules:
 - The template file must exist under `templateRoot` using the same relative path.
 - File ownership is exclusive by default. If two features list the same file, that is a conflict
   (see Conflict Handling).
+- `templateFiles` is an optional, disjoint set of repo-root-relative paths whose contents are
+  templates only; drift is allowed and should not be reported.
+- `templateFiles` entries must not appear in `files`, but still must exist under `templateRoot`.
+- Sync writes `templateFiles` only when missing; existing files are never overwritten.
 - `fileRules` can override file requirements. `require: "exists"` means the file must exist in the
   target repo, but its contents are not compared or synced.
 - `changes` is keyed by the version in which the rename/delete occurred.

@@ -1,9 +1,14 @@
 {
   "domain": "lint",
   "version": "1.0.0",
-  "description": "Linting and formatting configuration.",
+  "description": "Linting, formatting, and pre-commit configuration.",
   "templateRoot": "config/features/lint/1.0.0/files",
-  "files": [".oxlintrc.json", ".prettierignore", "prettier.config.mjs"],
+  "files": [".oxlintrc.json", "lefthook.yml"],
+  "templateFiles": ["prettier.config.mjs"],
   "changes": {},
-  "fileRules": {}
+  "fileRules": {
+    ".prettierignore": {
+      "require": "exists"
+    }
+  }
 }

@@ -9,9 +9,10 @@ function writeFeature(options: {
   domain: string;
   version: string;
   files: string[];
+  templateFiles?: string[];
   templates?: Record<string, string>;
 }) {
-  const { repoRoot, domain, version, files, templates } = options;
+  const { repoRoot, domain, version, files, templateFiles, templates } = options;
   const featureRoot = join(repoRoot, "config/features", domain, version);
   const templateRoot = join(featureRoot, "files");
   mkdirSync(templateRoot, { recursive: true });
@@ -22,6 +23,7 @@ function writeFeature(options: {
     description: `${domain} ${version}`,
     templateRoot: `config/features/${domain}/${version}/files`,
     files,
+    templateFiles,
     changes: {},
   };
   writeFileSync(join(featureRoot, "feature.json"), JSON.stringify(feature, null, 2), "utf8");
@@ -171,5 +173,54 @@ describe("collectSyncReport", () => {
       type: "merge",
       resolution: "kept local",
     });
+  });
+
+  it("writes template-only files when missing but never overwrites them", () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), "cookie-sync-"));
+    const projectRoot = join(repoRoot, "demo");
+    mkdirSync(projectRoot, { recursive: true });
+
+    writeFeature({
+      repoRoot,
+      domain: "lint",
+      version: "1.0.0",
+      files: [],
+      templateFiles: ["prettier.config.mjs"],
+      templates: { "prettier.config.mjs": "export default {};" },
+    });
+
+    writeProject({
+      repoRoot,
+      name: "demo",
+      path: projectRoot,
+      features: { lint: "1.0.0" },
+    });
+
+    let report = collectSyncReport({
+      repoRoot,
+      configRoot: join(repoRoot, "config"),
+    });
+
+    expect(report.projects[0].actions).toEqual([
+      {
+        kind: "write",
+        path: "prettier.config.mjs",
+        content: "export default {};",
+        source: "lint@1.0.0",
+      },
+    ]);
+
+    writeFileSync(
+      join(projectRoot, "prettier.config.mjs"),
+      "export default { semi: false };",
+      "utf8",
+    );
+
+    report = collectSyncReport({
+      repoRoot,
+      configRoot: join(repoRoot, "config"),
+    });
+
+    expect(report.projects[0].actions).toEqual([]);
   });
 });

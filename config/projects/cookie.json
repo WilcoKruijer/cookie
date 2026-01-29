@@ -1,12 +1,4 @@
 {
   "name": "cookie",
-  "path": "/Users/wilco/dev/cookie",
-  "features": {
-    "changeset": "1.0.0",
-    "ci": "1.0.0",
-    "lint": "1.0.0",
-    "monorepo": "1.0.0",
-    "lefthook": "1.0.0",
-    "ai": "1.0.0"
-  }
+  "path": "/Users/wilco/dev/cookie"
 }

@@ -24,13 +24,10 @@ describe("mergeJsonFragments", () => {
   });
 
   it("records conflicts when features set different values", () => {
-    const { merged, conflicts } = mergeJsonFragments(
-      {},
-      [
-        { source: "lint@1.0.0", value: { scripts: { lint: "oxlint ." } } },
-        { source: "ci@1.0.0", value: { scripts: { lint: "eslint ." } } },
-      ],
-    );
+    const { merged, conflicts } = mergeJsonFragments({}, [
+      { source: "lint@1.0.0", value: { scripts: { lint: "oxlint ." } } },
+      { source: "ci@1.0.0", value: { scripts: { lint: "eslint ." } } },
+    ]);
 
     expect(merged).toEqual({ scripts: { lint: "eslint ." } });
     expect(conflicts).toHaveLength(1);

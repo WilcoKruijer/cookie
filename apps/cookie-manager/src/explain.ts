@@ -3,11 +3,7 @@ import { isAbsolute, join, relative } from "node:path";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeatures, loadProjects } from "./config.js";
 import { loadJsonMergeFragments } from "./merge.js";
-import {
-  collectStatusReport,
-  type StatusConflict,
-  type StatusDrift,
-} from "./status.js";
+import { collectStatusReport, type StatusConflict, type StatusDrift } from "./status.js";
 
 export type ExplainOwnershipType = "template" | "rule" | "json-merge" | "unknown";
 
@@ -96,6 +92,9 @@ function resolveOwnership(options: {
   for (const feature of features) {
     const key = featureKey(feature);
     if (feature.files.includes(filePath)) {
+      templateOwners.push(key);
+    }
+    if (feature.templateFiles?.includes(filePath)) {
       templateOwners.push(key);
     }
     if (feature.fileRules) {

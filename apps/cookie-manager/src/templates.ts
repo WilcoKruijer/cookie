@@ -21,21 +21,34 @@ export function resolveFeatureTemplates(options: {
   templateVars?: Record<string, string>;
 }): FeatureTemplateResolution {
   const { repoRoot, feature, templateVars } = options;
-  const templateRoot = resolveTemplateRoot(repoRoot, feature);
-  const files = feature.files.map((filePath) => {
-    const templatePath = join(templateRoot, filePath);
-    if (!existsSync(templatePath)) {
-      throw new Error(
-        `Missing template for ${feature.domain}@${feature.version}: ${templatePath}`,
-      );
-    }
-    const content = applyTemplateVars(readFileSync(templatePath, "utf8"), templateVars);
-    return { path: filePath, content };
+  const files = loadTemplateFiles({
+    repoRoot,
+    feature,
+    paths: feature.files,
+    templateVars,
   });
 
   const { renames, deletes } = resolveFeatureChanges(feature);
 
   return { files, renames, deletes };
+}
+
+export function loadTemplateFiles(options: {
+  repoRoot: string;
+  feature: FeatureDefinition;
+  paths: string[];
+  templateVars?: Record<string, string>;
+}): ResolvedTemplateFile[] {
+  const { repoRoot, feature, paths, templateVars } = options;
+  const templateRoot = resolveTemplateRoot(repoRoot, feature);
+  return paths.map((filePath) => {
+    const templatePath = join(templateRoot, filePath);
+    if (!existsSync(templatePath)) {
+      throw new Error(`Missing template for ${feature.domain}@${feature.version}: ${templatePath}`);
+    }
+    const content = applyTemplateVars(readFileSync(templatePath, "utf8"), templateVars);
+    return { path: filePath, content };
+  });
 }
 
 export function resolveTemplateRoot(repoRoot: string, feature: FeatureDefinition): string {

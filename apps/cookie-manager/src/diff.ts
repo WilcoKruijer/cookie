@@ -13,14 +13,7 @@ export function createUnifiedDiff(expected: string, actual: string): string | nu
     writeFileSync(actualPath, actual, "utf8");
     const diff =
       runDiffCommand("diff", ["-u", expectedPath, actualPath]) ??
-      runDiffCommand("git", [
-        "diff",
-        "--no-index",
-        "--no-color",
-        "--",
-        expectedPath,
-        actualPath,
-      ]);
+      runDiffCommand("git", ["diff", "--no-index", "--no-color", "--", expectedPath, actualPath]);
 
     if (!diff || diff.trim().length === 0) {
       return null;

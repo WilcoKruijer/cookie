@@ -7,7 +7,7 @@ const projectConfigSchema = z
     name: z.string(),
     path: z.string(),
     templateVars: z.record(z.string(), z.string()).optional(),
-    features: z.record(z.string(), z.string()),
+    features: z.record(z.string(), z.string()).optional().default({}),
   })
   .strict();
 
@@ -37,9 +37,25 @@ const featureDefinitionSchema = z
     description: z.string(),
     templateRoot: z.string(),
     files: z.array(z.string()),
+    templateFiles: z.array(z.string()).optional(),
     changes: z.record(z.string(), featureChangeSchema).optional(),
     fileRules: z.record(z.string(), featureRuleSchema).optional(),
     fileMerge: featureMergeSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.templateFiles) {
+      return;
+    }
+    const fileSet = new Set(value.files);
+    for (const path of value.templateFiles) {
+      if (fileSet.has(path)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `templateFiles must not overlap files: ${path}`,
+          path: ["templateFiles"],
+        });
+      }
+    }
   })
   .strict();
 

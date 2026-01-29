@@ -9,11 +9,13 @@ function writeFeature(options: {
   domain: string;
   version: string;
   files: string[];
+  templateFiles?: string[];
   fileRules?: Record<string, { require: "exists" }>;
   fileMerge?: { json: string[] };
   templates?: Record<string, string>;
 }) {
-  const { repoRoot, domain, version, files, fileRules, fileMerge, templates } = options;
+  const { repoRoot, domain, version, files, templateFiles, fileRules, fileMerge, templates } =
+    options;
   const featureRoot = join(repoRoot, "config/features", domain, version);
   const templateRoot = join(featureRoot, "files");
   mkdirSync(templateRoot, { recursive: true });
@@ -24,6 +26,7 @@ function writeFeature(options: {
     description: `${domain} ${version}`,
     templateRoot: `config/features/${domain}/${version}/files`,
     files,
+    templateFiles,
     changes: {},
     fileRules: fileRules ?? {},
     fileMerge,
@@ -191,5 +194,46 @@ describe("collectStatusReport", () => {
         detail: "scripts.lint",
       },
     ]);
+  });
+
+  it("ignores drift for template-only files", () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), "cookie-status-"));
+    const projectRoot = join(repoRoot, "demo");
+    mkdirSync(projectRoot, { recursive: true });
+
+    writeFeature({
+      repoRoot,
+      domain: "lint",
+      version: "1.0.0",
+      files: [],
+      templateFiles: ["prettier.config.mjs"],
+      templates: {
+        "prettier.config.mjs": "export default {};",
+      },
+    });
+
+    writeProject({
+      repoRoot,
+      name: "demo",
+      path: projectRoot,
+      features: {
+        lint: "1.0.0",
+      },
+    });
+
+    writeFileSync(
+      join(projectRoot, "prettier.config.mjs"),
+      "export default { semi: false };",
+      "utf8",
+    );
+
+    const report = collectStatusReport({
+      repoRoot,
+      configRoot: join(repoRoot, "config"),
+    });
+
+    const project = report.projects[0];
+    expect(project.mismatches).toEqual([]);
+    expect(project.missing).toEqual([]);
   });
 });

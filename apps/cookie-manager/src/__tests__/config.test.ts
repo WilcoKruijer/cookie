@@ -28,4 +28,29 @@ describe("config loaders", () => {
     writeFileSync(join(projectsDir, "bad.json"), JSON.stringify({ name: "bad" }), "utf8");
     expect(() => loadProjects(tempRoot)).toThrow(/Invalid config/);
   });
+
+  it("throws when templateFiles overlap files", () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "cookie-config-"));
+    const featureDir = join(tempRoot, "features", "lint", "1.0.0");
+    mkdirSync(featureDir, { recursive: true });
+    writeFileSync(
+      join(featureDir, "feature.json"),
+      JSON.stringify(
+        {
+          domain: "lint",
+          version: "1.0.0",
+          description: "lint",
+          templateRoot: "config/features/lint/1.0.0/files",
+          files: ["prettier.config.mjs"],
+          templateFiles: ["prettier.config.mjs"],
+          changes: {},
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    expect(() => loadFeatures(tempRoot)).toThrow(/templateFiles must not overlap files/);
+  });
 });

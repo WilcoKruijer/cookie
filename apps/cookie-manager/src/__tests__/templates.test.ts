@@ -10,11 +10,7 @@ describe("resolveFeatureTemplates", () => {
     const tempRoot = mkdtempSync(join(tmpdir(), "cookie-templates-"));
     const templateRoot = join(tempRoot, "config/features/docs/1.0.0/files");
     mkdirSync(templateRoot, { recursive: true });
-    writeFileSync(
-      join(templateRoot, "README.md"),
-      "Hello {{orgName}}/{{repoName}}!",
-      "utf8",
-    );
+    writeFileSync(join(templateRoot, "README.md"), "Hello {{orgName}}/{{repoName}}!", "utf8");
 
     const feature: FeatureDefinition = {
       domain: "docs",
@@ -32,9 +28,7 @@ describe("resolveFeatureTemplates", () => {
       templateVars: { orgName: "wilco", repoName: "cookie" },
     });
 
-    expect(resolved.files).toEqual([
-      { path: "README.md", content: "Hello wilco/cookie!" },
-    ]);
+    expect(resolved.files).toEqual([{ path: "README.md", content: "Hello wilco/cookie!" }]);
     expect(resolved.renames).toEqual({});
     expect(resolved.deletes).toEqual([]);
   });

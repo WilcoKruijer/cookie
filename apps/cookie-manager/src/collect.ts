@@ -9,7 +9,7 @@ import {
   type StatusReport,
 } from "./status.js";
 import { loadJsonMergeFragments, mergeJsonFragments, type JsonObject } from "./merge.js";
-import { resolveFeatureTemplates } from "./templates.js";
+import { loadTemplateFiles, resolveFeatureTemplates } from "./templates.js";
 import { createUnifiedDiff } from "./diff.js";
 
 export function collectMarkdownReport(options: {
@@ -20,8 +20,7 @@ export function collectMarkdownReport(options: {
   report?: StatusReport;
 }): string {
   const { repoRoot, configRoot, projectName, includeDiffs, report } = options;
-  const statusReport =
-    report ?? collectStatusReport({ repoRoot, configRoot, projectName });
+  const statusReport = report ?? collectStatusReport({ repoRoot, configRoot, projectName });
   const projects = loadProjects(configRoot);
   const features = loadFeatures(configRoot);
   const projectMap = new Map(projects.map((project) => [project.name, project]));
@@ -86,9 +85,7 @@ function appendConflicts(lines: string[], project: ProjectStatus): void {
   lines.push("### Conflicts");
   for (const conflict of project.conflicts) {
     const detail = conflict.detail ? ` (${conflict.detail})` : "";
-    lines.push(
-      `- \`${conflict.path}\` (${conflict.type}) ${conflict.owners.join(", ")}${detail}`,
-    );
+    lines.push(`- \`${conflict.path}\` (${conflict.type}) ${conflict.owners.join(", ")}${detail}`);
   }
   lines.push("");
 }
@@ -194,6 +191,18 @@ function buildTemplateIndex(options: {
   for (const feature of features) {
     const resolved = resolveFeatureTemplates({ repoRoot, feature, templateVars });
     for (const template of resolved.files) {
+      index.set(template.path, {
+        content: template.content,
+        feature: featureKey(feature),
+      });
+    }
+    const templateOnly = loadTemplateFiles({
+      repoRoot,
+      feature,
+      paths: feature.templateFiles ?? [],
+      templateVars,
+    });
+    for (const template of templateOnly) {
       index.set(template.path, {
         content: template.content,
         feature: featureKey(feature),

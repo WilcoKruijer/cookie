@@ -324,9 +324,7 @@ function printExplainReport(report: ExplainReport): void {
     console.log("Status: conflict");
     for (const conflict of report.conflicts) {
       const detail = conflict.detail ? ` (${conflict.detail})` : "";
-      console.log(
-        `  - ${conflict.path} [${conflict.type}] ${conflict.owners.join(", ")}${detail}`,
-      );
+      console.log(`  - ${conflict.path} [${conflict.type}] ${conflict.owners.join(", ")}${detail}`);
     }
     console.log("");
     return;
