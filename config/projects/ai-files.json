@@ -1,0 +1,8 @@
+{
+  "name": "ai-files",
+  "path": "/Users/wilco/dev/ai-files",
+  "templateVars": {
+    "NPM_SCOPE": "@wilco"
+  },
+  "features": ["ai", "lint", "specs", "turbo", "tsconfig", "scripts"]
+}

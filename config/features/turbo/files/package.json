@@ -1,5 +1,5 @@
 {
-  "name": "@cookie-dev/root",
+  "name": "{{NPM_SCOPE}}/root",
   "private": true,
   "packageManager": "pnpm@10.28.1",
   "engines": {
@@ -23,6 +23,7 @@
     "build": "turbo run build --output-logs=errors-only",
     "types:check": "turbo run types:check --output-logs=errors-only",
     "test": "turbo run test --output-logs=errors-only",
+    "prepare": "lefthook install",
     "ci:version": "changeset version && pnpm install",
     "ci:publish": "changeset publish && changeset tag"
   }

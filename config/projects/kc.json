@@ -1,5 +1,8 @@
 {
   "name": "kc",
   "path": "/Users/wilco/dev/kc",
+  "templateVars": {
+    "NPM_SCOPE": "@wilco"
+  },
   "features": ["lint", "turbo", "ai"]
 }

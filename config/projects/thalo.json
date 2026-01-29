@@ -1,5 +1,8 @@
 {
   "name": "thalo",
   "path": "/Users/wilco/dev/thalo",
+  "templateVars": {
+    "NPM_SCOPE": "@rejot-dev"
+  },
   "features": ["changeset", "lint", "turbo", "ai"]
 }

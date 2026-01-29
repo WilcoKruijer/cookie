@@ -1,5 +1,8 @@
 {
   "name": "cookie",
   "path": "/Users/wilco/dev/cookie",
+  "templateVars": {
+    "NPM_SCOPE": "@wilco"
+  },
   "features": ["changeset", "lint", "turbo", "ai", "specs"]
 }

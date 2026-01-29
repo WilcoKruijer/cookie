@@ -1,5 +1,8 @@
 {
   "name": "fragno",
   "path": "/Users/wilco/dev/fragno",
+  "templateVars": {
+    "NPM_SCOPE": "@fragno-dev"
+  },
   "features": ["changeset", "lint", "turbo", "ai", "specs"]
 }
