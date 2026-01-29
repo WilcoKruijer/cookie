@@ -5,7 +5,7 @@
 #
 # Example:
 #   ./specs/run-implementation-loop.sh --plan specs/impl-ai-fragment.md
-#   ./specs/run-implementation-loop.sh --plan specs/impl-ai-fragment.md --prompt specs/prompt.md
+#   ./specs/run-implementation-loop.sh --plan specs/impl-ai-fragment.md --prompt specs/PROMPT.md
 
 set -e
 
