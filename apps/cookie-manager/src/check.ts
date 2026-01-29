@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { extname, join } from "node:path";
+import { basename, extname, join } from "node:path";
+import { createTwoFilesPatch } from "diff";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeature, loadProjects } from "./config.js";
 import { applyTemplateVars } from "./templates.js";
@@ -10,8 +11,9 @@ export function collectCheckReport(options: {
   configRoot: string;
   featureName: string;
   projectName?: string;
+  includeDiffs?: boolean;
 }): string {
-  const { configRoot, featureName, projectName } = options;
+  const { configRoot, featureName, projectName, includeDiffs } = options;
   const projects = loadProjects(configRoot);
   const feature = loadFeature(configRoot, featureName);
 
@@ -56,12 +58,6 @@ export function collectCheckReport(options: {
     lines.push("");
 
     for (const filePath of feature.files) {
-      const templateContent = templateContents.get(filePath) ?? null;
-      const renderedTemplate =
-        templateContent === null
-          ? MISSING_MARKER
-          : applyTemplateVars(templateContent, project.templateVars);
-
       const projectFilePath = join(project.path, filePath);
       const projectContent = existsSync(projectFilePath)
         ? readFileSync(projectFilePath, "utf8")
@@ -70,20 +66,37 @@ export function collectCheckReport(options: {
       const language = languageTag(filePath);
 
       lines.push(`### ${filePath}`);
-      lines.push("Rendered Template:");
-      lines.push("```" + language);
-      lines.push(renderedTemplate);
-      lines.push("```");
-      lines.push("Project File:");
       lines.push("```" + language);
       lines.push(projectContent);
       lines.push("```", "");
+
+      if (includeDiffs) {
+        const renderedTemplate = renderTemplate({
+          templateContents,
+          filePath,
+          project,
+        });
+        lines.push("Rendered Diff:");
+        lines.push("```diff");
+        lines.push(
+          createTwoFilesPatch(
+            `template/${filePath}`,
+            `project/${filePath}`,
+            renderedTemplate,
+            projectContent,
+            "",
+            "",
+            { context: 3 },
+          ).trimEnd(),
+        );
+        lines.push("```", "");
+      }
     }
   }
 
   lines.push("## LLM Prompt");
   lines.push("```text");
-  lines.push(buildPrompt(feature.name));
+  lines.push(buildPrompt(feature.name, templateContents, Boolean(includeDiffs)));
   lines.push("```");
 
   return lines.join("\n");
@@ -125,13 +138,38 @@ function languageTag(filePath: string): string {
   return known.has(normalized) ? normalized : "text";
 }
 
-function buildPrompt(featureName: string): string {
+function buildPrompt(
+  featureName: string,
+  templateContents: Map<string, string | null>,
+  includeDiffs: boolean,
+): string {
+  const readmeEntries = [...templateContents.entries()].filter(([filePath]) =>
+    isReadme(filePath),
+  );
+  const readmeSection =
+    readmeEntries.length === 0
+      ? "Feature README(s): none."
+      : [
+          "Feature README(s):",
+          ...readmeEntries.flatMap(([filePath, content]) => [
+            `- ${filePath}`,
+            "```md",
+            content ?? MISSING_MARKER,
+            "```",
+          ]),
+        ].join("\n");
+
+  const diffNote = includeDiffs ? "- Per-project diffs between rendered templates and files.\n" : "";
+
   return `You are reviewing drift for the feature "${featureName}".
 
 You are given:
 - Canonical template files.
-- Per-project rendered templates.
+- Feature README(s).
 - Per-project current files (or MISSING markers).
+${diffNote ? diffNote.trimEnd() + "\n" : ""}
+
+${readmeSection}
 
 Task:
 1. For each file, compare the rendered template to the project file and summarize drift.
@@ -147,4 +185,21 @@ Task:
    removed from the feature.
 
 Do not edit files directly. Provide recommendations only.`;
+}
+
+function isReadme(filePath: string): boolean {
+  return basename(filePath).toLowerCase().startsWith("readme");
+}
+
+function renderTemplate(options: {
+  templateContents: Map<string, string | null>;
+  filePath: string;
+  project: ProjectConfig;
+}): string {
+  const { templateContents, filePath, project } = options;
+  const templateContent = templateContents.get(filePath) ?? null;
+  if (templateContent === null) {
+    return MISSING_MARKER;
+  }
+  return applyTemplateVars(templateContent, project.templateVars);
 }

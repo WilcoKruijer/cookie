@@ -1,5 +1,5 @@
 {
   "name": "is3a-site",
   "path": "/Users/wilco/dev/is3a-site",
-  "features": ["changeset", "ci", "lint", "monorepo", "ai"]
+  "features": ["ci", "lint", "monorepo", "ai"]
 }

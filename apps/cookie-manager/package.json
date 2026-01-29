@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "cookie-manager": "dist/cli.js"
+    "cookie-manager": "bin/run.js"
   },
   "scripts": {
     "dev": "tsx src/cli.ts --help",
@@ -14,9 +14,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "diff": "^7.0.0",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.0",
     "zod": "^4.1.5"
   },
   "devDependencies": {
+    "@types/diff": "^7.0.2",
     "vitest": "^3.2.4"
   }
 }

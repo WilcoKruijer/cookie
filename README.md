@@ -7,23 +7,26 @@ related repos by feature domain (changeset, ci, lint, monorepo, lefthook, ai).
 
 ```bash
 pnpm install
-pnpm exec tsx apps/cookie-manager/src/cli.ts --help
+pnpm exec cookie-manager --help
 ```
 
 ## CLI examples
 
 ```bash
 # List configured projects
-pnpm exec tsx apps/cookie-manager/src/cli.ts projects
+pnpm exec cookie-manager projects
 
 # Show a single project config
-pnpm exec tsx apps/cookie-manager/src/cli.ts show fragno
+pnpm exec cookie-manager show fragno
 
 # Generate a drift report for one feature across all projects
-pnpm exec tsx apps/cookie-manager/src/cli.ts check --feature lint
+pnpm exec cookie-manager check --feature lint
+
+# Include diffs between rendered templates and project files
+pnpm exec cookie-manager check --feature lint --diff
 
 # Limit the report to one project and write to a file
-pnpm exec tsx apps/cookie-manager/src/cli.ts check --feature lint --project fragno --output report.md
+pnpm exec cookie-manager check --feature lint --project fragno > report.md
 ```
 
 ## Exit codes

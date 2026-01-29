@@ -103,7 +103,7 @@ Rules:
 
 ## CLI Commands
 
-- `cookie-manager check --feature <name> [--project <name>] [--output <path>]`
+- `cookie-manager check --feature <name> [--project <name>] [--diff]`
 - `cookie-manager projects` (optional utility) — list configured projects.
 - `cookie-manager show <name>` (optional utility) — print project config.
 
@@ -113,7 +113,7 @@ Inputs:
 
 - `--feature <name>` is required.
 - `--project <name>` limits the report to one project.
-- `--output <path>` writes the Markdown report to a file (stdout is the default).
+- `--diff` includes per-project diffs between rendered templates and project files.
 
 Processing steps:
 
@@ -129,6 +129,9 @@ Processing steps:
    - Read the file from the project repo if it exists.
    - If missing, note it in the report.
 6. Emit the Markdown report and include the LLM prompt section.
+   - If stdout is a TTY, render Markdown for terminal display.
+   - If stdout is not a TTY (piped/redirected), emit raw Markdown.
+7. When `--diff` is set, include a rendered diff block for each project file.
 
 ## Report Format
 
@@ -191,7 +194,8 @@ Do not edit files directly. Provide recommendations only.
 ## Output & Logging
 
 - Default output is the Markdown report to stdout.
-- `--output` writes the report to the provided path.
+- When stdout is a TTY, render Markdown for terminal display.
+- When stdout is not a TTY, emit raw Markdown (for piping/redirects).
 - Exit codes:
   - `0`: report generated successfully
   - `2`: fatal error (invalid config, missing template vars)
