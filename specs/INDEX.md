@@ -1,4 +1,4 @@
-# Specs - Readme
+# Specs
 
 ## Contents
 
@@ -6,16 +6,15 @@
 - [Spec Requirements](#spec-requirements)
 - [Implementation Plan Requirements](#implementation-plan-requirements)
 - [Reference Handling](#reference-handling)
-
-The INDEX of other specs and implementation plans is located in `specs/INDEX.md`.
+- [Specifications](#specifications)
+- [Implementation Plans](#implementation-plans)
 
 This repo uses specs and implementation plans to define and build features. The goal is to produce
 very detailed, living documents that guide implementation without constraining the order of work.
 
 ## Process Overview
 
-1. Read repo `README.md` and `CLAUDE.md`/`AGENTS.md` first to understand the project and its
-   conventions.
+1. Read repo `README.md` and `CLAUDE.md` first to understand the project and its conventions.
 2. Review existing specs for patterns and language; use the strongest spec as the quality bar.
 3. Review other specs to understand adjacent domains and prior decisions.
 4. Review current project code and documentation for context.
@@ -58,3 +57,13 @@ very detailed, living documents that guide implementation without constraining t
 - Specs should reference **live code paths** or external URLs directly.
 - Do not copy code into `specs/references/`; avoid frozen snapshots.
 - Keep references scoped to what the spec needs; do not bulk-copy unrelated material.
+
+## Specifications
+
+- [Cookie Manager — Spec](./spec-cookie-manager.md) — Feature-based repo normalization CLI.
+
+## Implementation Plans
+
+- [Cookie Manager — Implementation Plan](./impl-cookie-manager.md) — Initial CLI and config system.
+- [Cookie Manager — Check-Only Implementation Plan](./impl-cookie-manager-check.md) — Read-only
+  `check` workflow and report generation.

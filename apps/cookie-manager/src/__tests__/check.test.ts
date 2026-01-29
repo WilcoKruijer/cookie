@@ -300,4 +300,87 @@ describe("collectCheckReport", () => {
     expect(report).toContain("**File is missing**");
     expect(report).not.toContain("```diff");
   });
+
+  it("ignores template variables configured on the feature", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+          ignoredTemplateVariables: ["SKIP_ME"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "lint", "files", "alpha.txt"), "alpha {{SKIP_ME}}\n");
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: join(configRoot, "..", "alpha"),
+          features: ["lint"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "..", "alpha", "alpha.txt"), "alpha {{SKIP_ME}}\n");
+
+    const report = collectCheckReport({
+      configRoot,
+      featureName: "lint",
+      includeDiffs: true,
+    });
+
+    expect(report).toContain("_files are identical_");
+  });
+
+  it("errors when a project does not include the feature", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: join(configRoot, "..", "alpha"),
+          features: ["other"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    mkdirSync(join(configRoot, "..", "alpha"), { recursive: true });
+
+    expect(() =>
+      collectCheckReport({
+        configRoot,
+        featureName: "lint",
+        projectName: "alpha",
+      }),
+    ).toThrowError("Project alpha does not include feature lint.");
+  });
 });

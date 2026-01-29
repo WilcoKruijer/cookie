@@ -1,5 +1,5 @@
 {
   "name": "fragno",
   "path": "/Users/wilco/dev/fragno",
-  "features": ["changeset", "ci", "lint", "monorepo", "ai"]
+  "features": ["changeset", "ci", "lint", "monorepo", "ai", "specs"]
 }

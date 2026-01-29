@@ -16,7 +16,9 @@ cherry-picking.
 
 ### Suggested Scopes
 
-[SCOPE] - [AREA] (insert suggested scopes here)
+[SCOPE] - [AREA]
+
+(insert suggested scopes here)
 
 ### Changesets
 

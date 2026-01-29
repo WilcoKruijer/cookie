@@ -58,3 +58,4 @@ very detailed, living documents that guide implementation without constraining t
 - Specs should reference **live code paths** or external URLs directly.
 - Do not copy code into `specs/references/`; avoid frozen snapshots.
 - Keep references scoped to what the spec needs; do not bulk-copy unrelated material.
+- See `specs/references/README.md` for more details.

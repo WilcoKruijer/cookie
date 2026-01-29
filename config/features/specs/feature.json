@@ -1,0 +1,13 @@
+{
+  "name": "specs",
+  "description": "Specifications, implementation plans, and workflow scripts.",
+  "files": [
+    "specs/COMMIT.md",
+    "specs/INDEX.md",
+    "specs/PROMPT.md",
+    "specs/README.md",
+    "specs/references/README.md",
+    "specs/run-implementation-loop.sh"
+  ],
+  "ignoredTemplateVariables": ["IMPLEMENTATION_PLAN"]
+}

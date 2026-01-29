@@ -1,5 +1,15 @@
 # AGENTS
 
+This is the "command center" for various projects on this machine.
+
+This repository contains the Cookie Manager CLI, which manages certain features that are present in
+multiple projects on this machine. The CLI allows you check if there is drift between the feature
+templates and the project files.
+
+You may also be asked from an LLM session in this repository to work on the different projects. If
+you are unsure where the project is located, you can use the `projects` command to list the
+configured projects.
+
 ## Agent Guidelines
 
 - After every change, run type check and relevant tests. ALWAYS.

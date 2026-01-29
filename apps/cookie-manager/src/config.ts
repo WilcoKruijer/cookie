@@ -16,6 +16,7 @@ const featureDefinitionSchema = z
     name: z.string(),
     description: z.string(),
     files: z.array(z.string()),
+    ignoredTemplateVariables: z.array(z.string()).optional(),
   })
   .strict();
 

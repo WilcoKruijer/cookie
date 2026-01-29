@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Script to run codex in a loop until an implementation plan is complete
-# Usage: ./scripts/run-implementation-loop.sh [--plan <path-to-implementation-plan>] [--prompt <path-to-prompt>]
+# Usage: ./specs/run-implementation-loop.sh [--plan <path-to-implementation-plan>] [--prompt <path-to-prompt>]
 #
 # Example:
-#   ./scripts/run-implementation-loop.sh --plan specs/impl-ai-fragment.md
-#   ./scripts/run-implementation-loop.sh --plan specs/impl-ai-fragment.md --prompt specs/prompt.md
+#   ./specs/run-implementation-loop.sh --plan specs/impl-ai-fragment.md
+#   ./specs/run-implementation-loop.sh --plan specs/impl-ai-fragment.md --prompt specs/prompt.md
 
 set -e
 

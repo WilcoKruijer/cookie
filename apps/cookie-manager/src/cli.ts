@@ -41,6 +41,9 @@ export function run(argv: string[] = process.argv.slice(2)): void {
       }
       for (const project of projects) {
         console.log(project.name);
+        console.log(`  path: ${project.path}`);
+        console.log(`  features: ${project.features.join(", ") || "none"}`);
+        console.log("");
       }
       break;
     }

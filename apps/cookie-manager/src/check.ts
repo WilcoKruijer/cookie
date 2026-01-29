@@ -81,6 +81,7 @@ export function collectCheckReport(options: {
           templateContents,
           filePath,
           project,
+          ignoredTemplateVariables: feature.ignoredTemplateVariables,
         });
         if (renderedTemplate === MISSING_MARKER || projectContent === MISSING_MARKER) {
           lines.push("**File is missing**", "");
@@ -130,7 +131,10 @@ function selectProjects(options: {
     if (!project) {
       throw new Error(`Project not found: ${projectName}`);
     }
-    return project.features.includes(feature.name) ? [project] : [];
+    if (!project.features.includes(feature.name)) {
+      throw new Error(`Project ${project.name} does not include feature ${feature.name}.`);
+    }
+    return [project];
   }
 
   return projects.filter((project) => project.features.includes(feature.name));
@@ -209,11 +213,14 @@ function renderTemplate(options: {
   templateContents: Map<string, string | null>;
   filePath: string;
   project: ProjectConfig;
+  ignoredTemplateVariables?: string[];
 }): string {
-  const { templateContents, filePath, project } = options;
+  const { templateContents, filePath, project, ignoredTemplateVariables } = options;
   const templateContent = templateContents.get(filePath) ?? null;
   if (templateContent === null) {
     return MISSING_MARKER;
   }
-  return applyTemplateVars(templateContent, project.templateVars);
+  return applyTemplateVars(templateContent, project.templateVars, {
+    ignoredVariables: ignoredTemplateVariables,
+  });
 }
