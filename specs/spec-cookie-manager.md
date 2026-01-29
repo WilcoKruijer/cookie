@@ -98,7 +98,7 @@ Rules:
 
 ## CLI Commands
 
-- `cookie-manager check --feature <name> [--project <name>] [--diff]`
+- `cookie-manager check [--feature <name>] [--project <name>] [--diff]`
 - `cookie-manager projects` (optional utility) — list configured projects.
 - `cookie-manager show <name>` (optional utility) — print project config.
 
@@ -106,8 +106,9 @@ Rules:
 
 Inputs:
 
-- `--feature <name>` is required.
-- `--project <name>` limits the report to one project.
+- `--feature <name>` limits the report to one feature. If omitted, check all features.
+- `--project <name>` limits the report to one project. If combined with no `--feature`, only the
+  project's features are checked.
 - `--diff` includes per-project diffs between rendered templates and project files.
 
 Processing steps:
@@ -130,7 +131,10 @@ Processing steps:
 
 ## Report Format
 
-The report is a single Markdown document with these sections in this order:
+The report is a single Markdown document per feature. When `--feature` is omitted, the CLI emits
+multiple feature reports separated by a Markdown horizontal rule (`---`).
+
+Each per-feature report contains these sections in this order:
 
 1. Title and metadata (feature name, generation timestamp, list of projects).
 2. `## Template Files` section with one subsection per template file.

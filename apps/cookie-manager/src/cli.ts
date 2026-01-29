@@ -90,10 +90,6 @@ export function run(argv: string[] = process.argv.slice(2)): void {
     }
     case "check": {
       const featureFlag = parsed.flags.feature;
-      if (!featureFlag || featureFlag === true) {
-        console.error("Missing feature name for --feature.");
-        process.exit(2);
-      }
       const projectFlag = parsed.flags.project;
       if (projectFlag === true) {
         console.error("Missing project name for --project.");
@@ -112,17 +108,42 @@ export function run(argv: string[] = process.argv.slice(2)): void {
         process.exit(2);
       }
 
-      const featureName = String(featureFlag);
       const projectName = typeof projectFlag === "string" ? projectFlag : undefined;
+      const includeDiffs = Boolean(diffFlag);
+
+      let featureNames: string[];
+      if (!featureFlag || featureFlag === true) {
+        if (projectName) {
+          const projects = loadProjects(configRoot);
+          const project = projects.find((entry) => entry.name === projectName);
+          if (!project) {
+            console.error(`Project not found: ${projectName}`);
+            process.exit(2);
+          }
+          featureNames = project.features;
+          if (featureNames.length === 0) {
+            console.error(`Project ${projectName} has no features to check.`);
+            process.exit(2);
+          }
+        } else {
+          featureNames = loadFeatures(configRoot).map((feature) => feature.name);
+        }
+      } else {
+        featureNames = [String(featureFlag)];
+      }
 
       let markdown: string;
       try {
-        markdown = collectCheckReport({
-          configRoot,
-          featureName,
-          projectName,
-          includeDiffs: Boolean(diffFlag),
-        });
+        markdown = featureNames
+          .map((featureName) =>
+            collectCheckReport({
+              configRoot,
+              featureName,
+              projectName,
+              includeDiffs,
+            }),
+          )
+          .join("\n\n---\n\n");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error(message);
@@ -157,7 +178,7 @@ Commands:
 
 Options:
   --config-root PATH Override the config directory (default: ./config)
-  --feature NAME     Feature name for check
+  --feature NAME     Feature name for check (omit to check all features)
   --project NAME     Limit check to a single project
   --diff             Include per-project diffs between templates and files
   --json             Print JSON output for projects
