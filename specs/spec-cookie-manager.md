@@ -3,9 +3,9 @@
 ## Decisions
 
 - Features are unversioned. Each feature has one canonical set of template files.
-- The CLI is read-only. It never writes to project repos.
+- `check` is read-only. Project initialization commands may write new configs and files.
 - `check` is the primary workflow command and replaces `status`, `sync`, `explain`, and `collect`.
-- `projects` and `show` are optional informational commands; they do not alter any state.
+- `project ls` and `show` are optional informational commands; they do not alter any state.
 - Feature templates are 1:1 file snapshots. There are no merge fragments, renames, deletes, or
   special file types.
 - Feature membership is declared in each project config. `check` only inspects projects that declare
@@ -25,7 +25,7 @@
 
 ## Non-goals
 
-- Writing or updating files in any project repo.
+- Writing or updating files in existing project repos.
 - Automated drift classification, merge strategies, or conflict resolution.
 - Versioning or migration logic for feature templates.
 
@@ -99,7 +99,14 @@ Rules:
 ## CLI Commands
 
 - `cookie-manager check [--feature <name>] [--project <name>] [--diff]`
-- `cookie-manager projects` (optional utility) — list configured projects.
+- `cookie-manager feature ls` (optional utility) — list configured features.
+- `cookie-manager feature add <project> <feature>` — add a feature to a project config.
+- `cookie-manager feature init <project> <feature>` — add a feature, copy templates, and update the
+  project config.
+- `cookie-manager project ls` (optional utility) — list configured projects.
+- `cookie-manager project add <name> <path> <features>` — add a project config.
+- `cookie-manager project init <path> <features>` — create a project directory with feature
+  templates and add a project config.
 - `cookie-manager show <name>` (optional utility) — print project config.
 
 ## `check` Behavior

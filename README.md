@@ -14,7 +14,7 @@ pnpm exec cookie-manager --help
 
 ```bash
 # List configured projects
-pnpm exec cookie-manager projects
+pnpm exec cookie-manager project ls
 
 # Show a single project config
 pnpm exec cookie-manager show fragno
