@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { basename, extname, join } from "node:path";
+import { extname, join } from "node:path";
 import { createTwoFilesPatch } from "diff";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeature, loadProjects } from "./config.js";
@@ -29,6 +29,16 @@ export function collectCheckReport(options: {
 
   const lines: string[] = [];
   lines.push("# Cookie Manager Check Report", "");
+  const featureReadmePath = join(configRoot, "features", feature.name, "README.md");
+  const featureReadme = existsSync(featureReadmePath)
+    ? readFileSync(featureReadmePath, "utf8")
+    : null;
+  if (featureReadme) {
+    lines.push("## Feature README");
+    lines.push("```md");
+    lines.push(featureReadme);
+    lines.push("```", "");
+  }
   lines.push(`- Feature: ${feature.name}`);
   lines.push(`- Generated: ${new Date().toISOString()}`);
   lines.push(
@@ -96,7 +106,7 @@ export function collectCheckReport(options: {
 
   lines.push("## LLM Prompt");
   lines.push("```text");
-  lines.push(buildPrompt(feature.name, templateContents, Boolean(includeDiffs)));
+  lines.push(buildPrompt(feature.name, Boolean(includeDiffs)));
   lines.push("```");
 
   return lines.join("\n");
@@ -138,38 +148,19 @@ function languageTag(filePath: string): string {
   return known.has(normalized) ? normalized : "text";
 }
 
-function buildPrompt(
-  featureName: string,
-  templateContents: Map<string, string | null>,
-  includeDiffs: boolean,
-): string {
-  const readmeEntries = [...templateContents.entries()].filter(([filePath]) =>
-    isReadme(filePath),
-  );
-  const readmeSection =
-    readmeEntries.length === 0
-      ? "Feature README(s): none."
-      : [
-          "Feature README(s):",
-          ...readmeEntries.flatMap(([filePath, content]) => [
-            `- ${filePath}`,
-            "```md",
-            content ?? MISSING_MARKER,
-            "```",
-          ]),
-        ].join("\n");
-
+function buildPrompt(featureName: string, includeDiffs: boolean): string {
   const diffNote = includeDiffs ? "- Per-project diffs between rendered templates and files.\n" : "";
 
-  return `You are reviewing drift for the feature "${featureName}".
+  return `You are reviewing drift for the feature "${featureName}", defined as part of the Cookie 
+Manager.
+
+Note: if the user asked you to run the command that produced this output, you should follow the
+      instructions below.
 
 You are given:
 - Canonical template files.
-- Feature README(s).
 - Per-project current files (or MISSING markers).
 ${diffNote ? diffNote.trimEnd() + "\n" : ""}
-
-${readmeSection}
 
 Task:
 1. For each file, compare the rendered template to the project file and summarize drift.
@@ -184,11 +175,25 @@ Task:
 7. If a project file is missing, recommend whether it should be created from the template or
    removed from the feature.
 
-Do not edit files directly. Provide recommendations only.`;
-}
+Do not edit files directly. Provide recommendations only.
+Output ONLY the suggestion-report in Markdown. Do not include any other commentary or preamble.
 
-function isReadme(filePath: string): boolean {
-  return basename(filePath).toLowerCase().startsWith("readme");
+Example output:
+\`\`\`markdown
+# Suggestion Report
+
+## Summary
+- ...
+
+## Suggested Template Updates
+### path/to/template.file
+- ...
+
+## Suggested Project Updates
+### project-name
+#### path/to/project.file
+- ...
+\`\`\``;
 }
 
 function renderTemplate(options: {

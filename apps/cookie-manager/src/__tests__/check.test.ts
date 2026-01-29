@@ -118,7 +118,7 @@ describe("collectCheckReport", () => {
 
     expect(report).toContain("### missing.txt");
     expect(report).toContain("```text\nMISSING\n```");
-    expect(report).toContain('You are reviewing drift for the feature "lint".');
+    expect(report).toContain('You are reviewing drift for the feature "lint"');
   });
 
   it("includes rendered diffs when enabled", () => {
@@ -164,5 +164,54 @@ describe("collectCheckReport", () => {
     expect(report).toContain("```diff");
     expect(report).toContain("-alpha");
     expect(report).toContain("+beta");
+  });
+
+  it("shows the feature README at the top and not in the LLM prompt", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "lint", "README.md"), "lint readme\n");
+    writeFile(join(configRoot, "features", "lint", "files", "alpha.txt"), "alpha\n");
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: join(configRoot, "..", "alpha"),
+          features: ["lint"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    mkdirSync(join(configRoot, "..", "alpha"), { recursive: true });
+
+    const report = collectCheckReport({
+      configRoot,
+      featureName: "lint",
+    });
+
+    const readmeIndex = report.indexOf("## Feature README");
+    const featureIndex = report.indexOf("- Feature: lint");
+    const promptIndex = report.indexOf("## LLM Prompt");
+
+    expect(readmeIndex).toBeGreaterThan(-1);
+    expect(featureIndex).toBeGreaterThan(readmeIndex);
+    expect(report).toContain("lint readme");
+    expect(report.lastIndexOf("lint readme")).toBeLessThan(promptIndex);
   });
 });
