@@ -3,6 +3,7 @@
 ## Decisions
 
 - Features are unversioned. Each feature has one canonical set of template files.
+- Templates are unversioned and applied once; they are not checked for drift after application.
 - `check` is read-only. Project initialization commands may write new configs and files.
 - `check` is the primary workflow command and replaces `status`, `sync`, `explain`, and `collect`.
 - `project ls` and `show` are optional informational commands; they do not alter any state.
@@ -22,10 +23,13 @@
 - Emit a Markdown report that is human-readable and ready for LLM review.
 - Include an embedded LLM prompt that instructs an LLM to assess drift and suggest updates for both
   templates and projects.
+- Support applying one-time templates to projects with the same template var rendering rules as
+  features.
 
 ## Non-goals
 
-- Writing or updating files in existing project repos.
+- Writing or updating files in existing project repos outside explicit init/apply commands.
+- Ongoing drift detection or reconciliation for templates after they are applied.
 - Automated drift classification, merge strategies, or conflict resolution.
 - Versioning or migration logic for feature templates.
 
@@ -36,7 +40,8 @@
 ## Terminology
 
 - **Feature**: A named bundle of repo setup files (e.g., `lint`, `turbo`, `changeset`).
-- **Template**: Canonical file content stored in this repo for a feature.
+- **Feature template**: Canonical file content stored in this repo for a feature.
+- **Template**: A one-time bundle of files applied to a project (not kept in sync).
 - **Project**: A repo on disk that declares which features it uses.
 - **Report**: The Markdown output produced by `check` containing templates, project files, and an
   LLM prompt.
@@ -47,6 +52,8 @@
 - `config/projects/*.json`: Project configs, one per repo.
 - `config/features/<feature>/feature.json`: Feature metadata.
 - `config/features/<feature>/files/`: Template files for that feature.
+- `config/templates/<template>/template.json`: Template metadata.
+- `config/templates/<template>/files/`: Template files for that template.
 
 ## Feature Definition Schema
 
@@ -65,6 +72,9 @@ Rules:
 - `files` are repo-root-relative paths.
 - For each `files` entry, the template file must exist at `config/features/<feature>/files/<path>`.
 - The order of `files` is preserved in the report.
+- `files` entries may include glob patterns. Globs are resolved against
+  `config/features/<feature>/files/` and expanded to matching files. Expanded paths are
+  repo-root-relative in the report.
 
 ## Project Config Schema
 
@@ -79,21 +89,46 @@ Project configs live in `config/projects/*.json`.
     "repoName": "fragno",
     "packageScope": "@wilco"
   },
-  "features": ["changeset", "lint", "turbo", "lefthook", "ai"]
+  "features": ["changeset", "lint", "turbo", "lefthook", "ai"],
+  "templates": ["github-actions", "eslint-react"]
 }
 ```
 
 Rules:
 
 - `features` is a list of feature names.
+- `templates` is an optional list of templates that have been applied to the project.
 - `templateVars` is optional but required if a template references `{{varName}}` placeholders.
 - Missing or invalid project paths are fatal errors.
+
+## Template Definition Schema
+
+Each template is defined by `template.json` and a `files/` directory of template files.
+
+```json
+{
+  "name": "github-actions",
+  "description": "Reusable CI workflows for JS repos.",
+  "files": [".github/workflows/ci.yml", ".github/dependabot.yml"]
+}
+```
+
+Rules:
+
+- `files` are repo-root-relative paths.
+- For each `files` entry, the template file must exist at
+  `config/templates/<template>/files/<path>`.
+- The order of `files` is preserved when applying the template.
+- `files` entries may include glob patterns. Globs are resolved against
+  `config/templates/<template>/files/` and expanded to matching files. Expanded paths are
+  repo-root-relative when applying the template.
 
 ## Template Rendering
 
 - Placeholder format: `{{varName}}` (case-sensitive).
 - Substitution uses `templateVars` from the project config.
-- Replacement happens when preparing the per-project template content in the report.
+- Replacement happens when preparing the per-project template content in the report and when
+  applying templates.
 - Missing keys are fatal errors for that project.
 
 ## CLI Commands
@@ -103,6 +138,9 @@ Rules:
 - `cookie-manager feature add <project> <feature>` — add a feature to a project config.
 - `cookie-manager feature init <project> <feature>` — add a feature, copy templates, and update the
   project config.
+- `cookie-manager template ls` — list configured templates.
+- `cookie-manager template apply <project> <template>` — render and copy template files into a
+  project, then record the template in the project config.
 - `cookie-manager project ls` (optional utility) — list configured projects.
 - `cookie-manager project add <name> <path> <features>` — add a project config.
 - `cookie-manager project init <path> <features>` — create a project directory with feature
@@ -135,6 +173,30 @@ Processing steps:
    - If stdout is a TTY, render Markdown for terminal display.
    - If stdout is not a TTY (piped/redirected), emit raw Markdown.
 7. When `--diff` is set, include a rendered diff block for each project file.
+
+Templates are ignored by `check`. Only feature templates and project feature files appear in the
+report.
+
+## `template apply` Behavior
+
+Inputs:
+
+- `<project>` is the project config name.
+- `<template>` is the template name.
+
+Processing steps:
+
+1. Load the project config and template definition.
+2. Resolve and read each template file from `config/templates/<template>/files/<path>`.
+3. Render each template file using the project `templateVars`.
+4. Validate that none of the target paths already exist in the project repo.
+5. Write the rendered files to the project repo in the order listed by `files`.
+6. Add the template name to the project config `templates` list (preserve existing order).
+
+Errors:
+
+- Missing template files or missing template vars are fatal errors.
+- If any target path already exists, the command fails without writing any files.
 
 ## Report Format
 
