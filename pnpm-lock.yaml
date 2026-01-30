@@ -41,6 +41,9 @@ importers:
       diff:
         specifier: ^7.0.0
         version: 7.0.0
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.3
       marked:
         specifier: ^15.0.12
         version: 15.0.12

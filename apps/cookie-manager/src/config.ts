@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
+import fg from "fast-glob";
 import { z } from "zod";
 
 const projectConfigSchema = z
@@ -8,6 +9,7 @@ const projectConfigSchema = z
     path: z.string(),
     templateVars: z.record(z.string(), z.string()).optional(),
     features: z.array(z.string()),
+    templates: z.array(z.string()).optional(),
   })
   .strict();
 
@@ -20,8 +22,17 @@ const featureDefinitionSchema = z
   })
   .strict();
 
+const templateDefinitionSchema = z
+  .object({
+    name: z.string(),
+    description: z.string(),
+    files: z.array(z.string()),
+  })
+  .strict();
+
 export type ProjectConfig = z.infer<typeof projectConfigSchema>;
 export type FeatureDefinition = z.infer<typeof featureDefinitionSchema>;
+export type TemplateDefinition = z.infer<typeof templateDefinitionSchema>;
 
 export function loadProjects(configDir: string): ProjectConfig[] {
   const projectsDir = join(configDir, "projects");
@@ -70,7 +81,12 @@ export function loadFeatures(configDir: string): FeatureDefinition[] {
         `Feature definition mismatch in ${featurePath}: expected ${featureName}, got ${parsed.data.name}.`,
       );
     }
-    return [parsed.data];
+    const expandedFiles = expandFileEntries({
+      baseDir: join(featureDir, "files"),
+      entries: parsed.data.files,
+      allowMissing: true,
+    });
+    return [{ ...parsed.data, files: expandedFiles }];
   });
 }
 
@@ -80,6 +96,49 @@ export function loadFeature(configDir: string, name: string): FeatureDefinition 
     throw new Error(`Feature not found: ${name}`);
   }
   return feature;
+}
+
+export function loadTemplates(configDir: string): TemplateDefinition[] {
+  const templatesDir = join(configDir, "templates");
+  if (!existsSync(templatesDir)) {
+    return [];
+  }
+
+  const templateDirs = readdirSync(templatesDir)
+    .map((name: string) => join(templatesDir, name))
+    .filter((dir: string) => statSync(dir).isDirectory());
+
+  return templateDirs.flatMap((templateDir) => {
+    const templateName = basename(templateDir);
+    const templatePath = join(templateDir, "template.json");
+    if (!existsSync(templatePath)) {
+      return [];
+    }
+    const data = readJsonFile(templatePath);
+    const parsed = templateDefinitionSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error(formatZodError(templatePath, parsed.error));
+    }
+    if (parsed.data.name !== templateName) {
+      throw new Error(
+        `Template definition mismatch in ${templatePath}: expected ${templateName}, got ${parsed.data.name}.`,
+      );
+    }
+    const expandedFiles = expandFileEntries({
+      baseDir: join(templateDir, "files"),
+      entries: parsed.data.files,
+      allowMissing: false,
+    });
+    return [{ ...parsed.data, files: expandedFiles }];
+  });
+}
+
+export function loadTemplate(configDir: string, name: string): TemplateDefinition {
+  const template = loadTemplates(configDir).find((entry) => entry.name === name);
+  if (!template) {
+    throw new Error(`Template not found: ${name}`);
+  }
+  return template;
 }
 
 function readJsonFile(filePath: string): unknown {
@@ -99,4 +158,34 @@ function formatZodError(filePath: string, error: z.ZodError): string {
     })
     .join("; ");
   return `Invalid config in ${filePath}: ${details}`;
+}
+
+function expandFileEntries(options: {
+  baseDir: string;
+  entries: string[];
+  allowMissing: boolean;
+}): string[] {
+  const { baseDir, entries, allowMissing } = options;
+  const expanded: string[] = [];
+  for (const entry of entries) {
+    if (!fg.isDynamicPattern(entry)) {
+      expanded.push(entry);
+      continue;
+    }
+    const matches = fg.sync(entry, {
+      cwd: baseDir,
+      onlyFiles: true,
+      dot: true,
+      unique: true,
+    });
+    if (matches.length === 0) {
+      if (allowMissing) {
+        expanded.push(entry);
+        continue;
+      }
+      throw new Error(`No files matched glob "${entry}" in ${baseDir}.`);
+    }
+    expanded.push(...matches);
+  }
+  return expanded;
 }

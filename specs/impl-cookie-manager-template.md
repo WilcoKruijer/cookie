@@ -1,10 +1,10 @@
 # Cookie Manager — Template Application Implementation Plan
 
-- [ ] Extend project config schema and loaders to include optional `templates` list (Spec: Project
+- [x] Extend project config schema and loaders to include optional `templates` list (Spec: Project
       Config Schema).
-- [ ] Add template config schema and loader for `config/templates/<template>/template.json` and
+- [x] Add template config schema and loader for `config/templates/<template>/template.json` and
       template file resolution (Spec: Template Definition Schema, Repo Layout).
-- [ ] Support glob expansion for template `files` entries (Spec: Template Definition Schema).
+- [x] Support glob expansion for template `files` entries (Spec: Template Definition Schema).
 - [ ] Implement template rendering for template application using existing `templateVars`
       substitution (Spec: Template Rendering).
 - [ ] Add `template ls` command to list configured templates (Spec: CLI Commands).
