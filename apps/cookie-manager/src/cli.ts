@@ -6,7 +6,8 @@ import { marked } from "marked";
 // @ts-expect-error - marked-terminal types are outdated for v7
 import { markedTerminal } from "marked-terminal";
 import { collectCheckReport } from "./check.js";
-import { loadFeatures, loadProjects } from "./config.js";
+import { loadFeatures, loadProjects, loadTemplates } from "./config.js";
+import { applyTemplateToProject } from "./template-apply.js";
 import { applyTemplateVars } from "./templates.js";
 
 type ParsedArgs = {
@@ -37,6 +38,7 @@ export function run(argv: string[] = process.argv.slice(2)): void {
     parsed.command !== "project" &&
     parsed.command !== "feature" &&
     parsed.command !== "check" &&
+    parsed.command !== "template" &&
     parsed.command !== "features" &&
     parsed.command !== "show"
   ) {
@@ -421,6 +423,76 @@ export function run(argv: string[] = process.argv.slice(2)): void {
       }
       break;
     }
+    case "template": {
+      const subcommand = parsed.positionals[0];
+      const args = parsed.positionals.slice(1);
+
+      if (!subcommand || subcommand === "help") {
+        printTemplateHelp();
+        process.exit(0);
+      }
+
+      switch (subcommand) {
+        case "ls": {
+          if (parsed.flags.help) {
+            printTemplateLsHelp();
+            process.exit(0);
+          }
+          if (args.length > 0) {
+            console.error("template ls does not accept positional arguments.");
+            process.exit(2);
+          }
+          const templates = loadTemplates(configRoot);
+          if (parsed.flags.json) {
+            console.log(JSON.stringify(templates, null, 2));
+            break;
+          }
+          for (const template of templates) {
+            console.log(template.name);
+            console.log(`  ${template.description}`);
+            console.log(`  files: ${template.files.join(", ") || "none"}`);
+            console.log("");
+          }
+          break;
+        }
+        case "apply": {
+          if (parsed.flags.help) {
+            printTemplateApplyHelp();
+            process.exit(0);
+          }
+          const projectName = args[0];
+          const templateName = args[1];
+          if (!projectName || !templateName) {
+            console.error("Usage: cookie-manager template apply <project> <template>");
+            process.exit(2);
+          }
+          if (args.length > 2) {
+            console.error("template apply accepts only <project> <template>.");
+            process.exit(2);
+          }
+
+          try {
+            applyTemplateToProject({
+              configRoot,
+              projectName,
+              templateName,
+            });
+            console.log(`Applied template ${templateName} to ${projectName}`);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(message);
+            process.exit(2);
+          }
+          break;
+        }
+        default: {
+          console.error(`Unknown template command: ${subcommand}`);
+          printTemplateHelp();
+          process.exit(1);
+        }
+      }
+      break;
+    }
     case "show": {
       if (parsed.flags.help) {
         printShowHelp();
@@ -530,6 +602,8 @@ Commands:
   feature ls         List configured features (includes README content)
   feature add        Add a feature to a project
   feature init       Add a feature and copy files into a project
+  template ls        List configured templates
+  template apply     Apply template files to a project
   project ls         List configured projects
   project add        Add a project config
   project init       Create a project directory with feature templates
@@ -569,6 +643,44 @@ Commands:
   init               Add a feature and copy its files into the project
 
 Run "cookie-manager feature <command> --help" for command-specific options.
+`);
+}
+
+function printTemplateHelp(): void {
+  console.log(`cookie-manager template <command> [options]
+
+Commands:
+  ls                 List configured templates
+  apply              Apply a template to a project
+
+Run "cookie-manager template <command> --help" for command-specific options.
+`);
+}
+
+function printTemplateLsHelp(): void {
+  console.log(`cookie-manager template ls [options]
+
+List configured templates.
+
+Options:
+  --config-root PATH Override the config directory (default: ./config)
+  --json             Print JSON output
+  --help             Show this help
+`);
+}
+
+function printTemplateApplyHelp(): void {
+  console.log(`cookie-manager template apply <project> <template>
+
+Apply a template to a project and update the project config.
+Fails if any template files already exist in the project.
+
+Arguments:
+  project            Project name from config/projects
+  template           Template name from config/templates
+
+Options:
+  --help             Show this help
 `);
 }
 

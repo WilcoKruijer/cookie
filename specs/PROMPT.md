@@ -4,4 +4,5 @@
 - after ALL tests pass, lint checks and types check, commit and push
 - follow conventional commits, study specs/COMMIT.md
 - update the implementation plan with current status
-- when ALL tasks are finished (all checkboxes marked), write only: <promise>TASKS_FINISHED</promise>
+- IF AND ONLY IF _ALL_ tasks are finished (all checkboxes marked), write only:
+  <promise>TASKS_FINISHED</promise>

@@ -25,6 +25,12 @@ pnpm exec cookie-manager check --feature lint
 # Include diffs between rendered templates and project files
 pnpm exec cookie-manager check --feature lint --diff
 
+# List configured templates
+pnpm exec cookie-manager template ls
+
+# Apply a template to a project
+pnpm exec cookie-manager template apply fragno github-actions
+
 # Limit the report to one project and write to a file
 pnpm exec cookie-manager check --feature lint --project fragno > report.md
 ```
