@@ -1,3 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import type { TemplateDefinition } from "./config.js";
+
 type TemplateVars = Record<string, string> | undefined;
 type TemplateVarOptions = {
   ignoredVariables?: string[];
@@ -27,5 +31,25 @@ export function applyTemplateVars(
       return String(replacements[key]);
     }
     return full;
+  });
+}
+
+export function renderTemplateFiles(options: {
+  configRoot: string;
+  template: TemplateDefinition;
+  templateVars?: Record<string, string>;
+}): { filePath: string; content: string }[] {
+  const { configRoot, template, templateVars } = options;
+  const baseDir = join(configRoot, "templates", template.name, "files");
+  return template.files.map((filePath) => {
+    const templatePath = join(baseDir, filePath);
+    if (!existsSync(templatePath)) {
+      throw new Error(`Missing template file for ${template.name}: ${templatePath}`);
+    }
+    const content = readFileSync(templatePath, "utf8");
+    return {
+      filePath,
+      content: applyTemplateVars(content, templateVars),
+    };
   });
 }

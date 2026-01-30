@@ -5,7 +5,7 @@
 - [x] Add template config schema and loader for `config/templates/<template>/template.json` and
       template file resolution (Spec: Template Definition Schema, Repo Layout).
 - [x] Support glob expansion for template `files` entries (Spec: Template Definition Schema).
-- [ ] Implement template rendering for template application using existing `templateVars`
+- [x] Implement template rendering for template application using existing `templateVars`
       substitution (Spec: Template Rendering).
 - [ ] Add `template ls` command to list configured templates (Spec: CLI Commands).
 - [ ] Add `template apply <project> <template>` command wiring in the CLI, including argument
