@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -342,6 +342,51 @@ describe("collectCheckReport", () => {
     });
 
     expect(report).toContain("_files are identical_");
+  });
+
+  it("reports symlink status and normalizes link targets", () => {
+    const { configRoot } = createWorkspace();
+    const projectRoot = join(configRoot, "..", "alpha");
+
+    writeFile(
+      join(configRoot, "features", "links", "feature.json"),
+      JSON.stringify(
+        {
+          name: "links",
+          description: "Linking feature",
+          files: [],
+          links: [{ path: "linked.txt", target: "nested/../target.txt", type: "file" }],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(
+      join(configRoot, "projects", "alpha.json"),
+      JSON.stringify(
+        {
+          name: "alpha",
+          path: projectRoot,
+          features: ["links"],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    mkdirSync(projectRoot, { recursive: true });
+    symlinkSync("nested/../target.txt", join(projectRoot, "linked.txt"), "file");
+
+    const report = collectCheckReport({
+      configRoot,
+      featureName: "links",
+    });
+
+    expect(report).toContain("## Template Links");
+    expect(report).toContain("linked.txt -> nested/../target.txt");
+    expect(report).toContain("### Links");
+    expect(report).toContain("status: OK");
   });
 
   it("errors when a project does not include the feature", () => {

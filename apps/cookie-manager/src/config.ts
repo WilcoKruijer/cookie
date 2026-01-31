@@ -13,12 +13,21 @@ const projectConfigSchema = z
   })
   .strict();
 
+const featureLinkSchema = z
+  .object({
+    path: z.string(),
+    target: z.string(),
+    type: z.enum(["file", "dir"]).optional(),
+  })
+  .strict();
+
 const featureDefinitionSchema = z
   .object({
     name: z.string(),
     description: z.string(),
     files: z.array(z.string()),
     ignoredTemplateVariables: z.array(z.string()).optional(),
+    links: z.array(featureLinkSchema).optional(),
   })
   .strict();
 
@@ -85,6 +94,17 @@ export function loadFeatures(configDir: string): FeatureDefinition[] {
       baseDir: join(featureDir, "files"),
       entries: parsed.data.files,
       allowMissing: true,
+    });
+    const links = parsed.data.links ?? [];
+    for (const link of links) {
+      if (fg.isDynamicPattern(link.path)) {
+        throw new Error(`Link path cannot be a glob: ${link.path}`);
+      }
+    }
+    assertUniqueFeaturePaths({
+      featurePath,
+      filePaths: expandedFiles,
+      linkPaths: links.map((link) => link.path),
     });
     return [{ ...parsed.data, files: expandedFiles }];
   });
@@ -188,4 +208,30 @@ function expandFileEntries(options: {
     expanded.push(...matches);
   }
   return expanded;
+}
+
+function assertUniqueFeaturePaths(options: {
+  featurePath: string;
+  filePaths: string[];
+  linkPaths: string[];
+}): void {
+  const { featurePath, filePaths, linkPaths } = options;
+  const seen = new Set<string>();
+  for (const filePath of filePaths) {
+    if (seen.has(filePath)) {
+      throw new Error(`Duplicate file path in ${featurePath}: ${filePath}`);
+    }
+    seen.add(filePath);
+  }
+  const linkSeen = new Set<string>();
+  for (const linkPath of linkPaths) {
+    if (linkSeen.has(linkPath)) {
+      throw new Error(`Duplicate link path in ${featurePath}: ${linkPath}`);
+    }
+    if (seen.has(linkPath)) {
+      throw new Error(`Link path conflicts with file path in ${featurePath}: ${linkPath}`);
+    }
+    linkSeen.add(linkPath);
+    seen.add(linkPath);
+  }
 }

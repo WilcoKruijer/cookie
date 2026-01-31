@@ -62,6 +62,52 @@ describe("config loaders", () => {
     expect(feature.files).toEqual(["alpha.txt", "beta.txt"]);
   });
 
+  it("accepts feature links and rejects path conflicts", () => {
+    const { configRoot } = createWorkspace();
+
+    writeFile(
+      join(configRoot, "features", "lint", "feature.json"),
+      JSON.stringify(
+        {
+          name: "lint",
+          description: "Linting feature",
+          files: ["alpha.txt"],
+          links: [{ path: "beta.txt", target: "../shared/beta.txt", type: "file" }],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "lint", "files", "alpha.txt"), "alpha\n");
+
+    const feature = loadFeature(configRoot, "lint");
+
+    expect(feature.links).toEqual([
+      { path: "beta.txt", target: "../shared/beta.txt", type: "file" },
+    ]);
+
+    writeFile(
+      join(configRoot, "features", "conflict", "feature.json"),
+      JSON.stringify(
+        {
+          name: "conflict",
+          description: "Conflicting feature",
+          files: ["alpha.txt"],
+          links: [{ path: "alpha.txt", target: "../shared/alpha.txt" }],
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    writeFile(join(configRoot, "features", "conflict", "files", "alpha.txt"), "alpha\n");
+
+    expect(() => loadFeature(configRoot, "conflict")).toThrowError(
+      "Link path conflicts with file path in",
+    );
+  });
+
   it("expands template file globs and errors when missing", () => {
     const { configRoot } = createWorkspace();
 

@@ -1,11 +1,19 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { marked } from "marked";
 // @ts-expect-error - marked-terminal types are outdated for v7
 import { markedTerminal } from "marked-terminal";
 import { collectCheckReport } from "./check.js";
+import type { FeatureDefinition } from "./config.js";
 import { loadFeatures, loadProjects, loadTemplates } from "./config.js";
 import { applyTemplateToProject } from "./template-apply.js";
 import { applyTemplateVars } from "./templates.js";
@@ -162,7 +170,11 @@ export function run(argv: string[] = process.argv.slice(2)): void {
             mkdirSync(projectPath, { recursive: true });
             writeRenderedTemplates({
               projectPath,
-              renderedTemplates,
+              renderedTemplates: renderedTemplates.files,
+            });
+            writeRenderedLinks({
+              projectPath,
+              links: renderedTemplates.links,
             });
             const projectName = basename(projectPath);
             const projectsDir = join(configRoot, "projects");
@@ -217,6 +229,7 @@ export function run(argv: string[] = process.argv.slice(2)): void {
         console.log(feature.name);
         console.log(`  ${feature.description}`);
         console.log(`  files: ${feature.files.join(", ") || "none"}`);
+        console.log(`  links: ${feature.links?.map((link) => link.path).join(", ") || "none"}`);
         if (feature.readme) {
           console.log("  readme:");
           for (const line of feature.readme.trimEnd().split("\n")) {
@@ -261,6 +274,7 @@ export function run(argv: string[] = process.argv.slice(2)): void {
             console.log(feature.name);
             console.log(`  ${feature.description}`);
             console.log(`  files: ${feature.files.join(", ") || "none"}`);
+            console.log(`  links: ${feature.links?.map((link) => link.path).join(", ") || "none"}`);
             if (feature.readme) {
               console.log("  readme:");
               for (const line of feature.readme.trimEnd().split("\n")) {
@@ -308,12 +322,12 @@ export function run(argv: string[] = process.argv.slice(2)): void {
               process.exit(2);
             }
 
-            const existingFiles = feature.files.filter((filePath) =>
-              existsSync(join(projectRoot, filePath)),
+            const existingPaths = collectFeaturePaths(feature).filter((filePath) =>
+              pathExists(join(projectRoot, filePath)),
             );
-            if (existingFiles.length > 0) {
+            if (existingPaths.length > 0) {
               console.error(
-                `Cannot add feature ${featureName}; files already exist:\n${existingFiles
+                `Cannot add feature ${featureName}; paths already exist:\n${existingPaths
                   .map((filePath) => `- ${filePath}`)
                   .join("\n")}`,
               );
@@ -374,12 +388,12 @@ export function run(argv: string[] = process.argv.slice(2)): void {
               process.exit(2);
             }
 
-            const existingFiles = feature.files.filter((filePath) =>
-              existsSync(join(projectRoot, filePath)),
+            const existingPaths = collectFeaturePaths(feature).filter((filePath) =>
+              pathExists(join(projectRoot, filePath)),
             );
-            if (existingFiles.length > 0) {
+            if (existingPaths.length > 0) {
               console.error(
-                `Cannot init feature ${featureName}; files already exist:\n${existingFiles
+                `Cannot init feature ${featureName}; paths already exist:\n${existingPaths
                   .map((filePath) => `- ${filePath}`)
                   .join("\n")}`,
               );
@@ -393,7 +407,11 @@ export function run(argv: string[] = process.argv.slice(2)): void {
             });
             writeRenderedTemplates({
               projectPath: projectRoot,
-              renderedTemplates,
+              renderedTemplates: renderedTemplates.files,
+            });
+            writeRenderedLinks({
+              projectPath: projectRoot,
+              links: renderedTemplates.links,
             });
 
             const projectFile = join(configRoot, "projects", `${project.name}.json`);
@@ -855,14 +873,14 @@ function ensureFeaturesExist(configRoot: string, featureNames: string[]) {
 function renderFeatureTemplates(options: {
   configRoot: string;
   features: ReturnType<typeof ensureFeaturesExist>;
-}): { filePath: string; content: string }[] {
+}): { files: { filePath: string; content: string }[]; links: FeatureDefinition["links"] } {
   const { configRoot, features } = options;
-  const written = new Set<string>();
+  const reservedPaths = new Set<string>();
   const renderedTemplates: { filePath: string; content: string }[] = [];
 
   for (const feature of features) {
     for (const filePath of feature.files) {
-      if (written.has(filePath)) {
+      if (reservedPaths.has(filePath)) {
         throw new Error(`Duplicate template path across features: ${filePath}`);
       }
 
@@ -875,11 +893,13 @@ function renderFeatureTemplates(options: {
         ignoredVariables: feature.ignoredTemplateVariables,
       });
       renderedTemplates.push({ filePath, content: rendered });
-      written.add(filePath);
+      reservedPaths.add(filePath);
     }
   }
 
-  return renderedTemplates;
+  const renderedLinks = collectFeatureLinks(features, reservedPaths);
+
+  return { files: renderedTemplates, links: renderedLinks };
 }
 
 function writeRenderedTemplates(options: {
@@ -898,7 +918,7 @@ function renderFeatureTemplatesForProject(options: {
   configRoot: string;
   feature: ReturnType<typeof ensureFeaturesExist>[number];
   project: ReturnType<typeof loadProjects>[number];
-}): { filePath: string; content: string }[] {
+}): { files: { filePath: string; content: string }[]; links: FeatureDefinition["links"] } {
   const { configRoot, feature, project } = options;
   const renderedTemplates: { filePath: string; content: string }[] = [];
 
@@ -914,5 +934,64 @@ function renderFeatureTemplatesForProject(options: {
     renderedTemplates.push({ filePath, content: rendered });
   }
 
-  return renderedTemplates;
+  const renderedLinks = (feature.links ?? []).map((link) => ({
+    ...link,
+    target: normalizeLinkTarget(link.target),
+  }));
+
+  return { files: renderedTemplates, links: renderedLinks };
+}
+
+function writeRenderedLinks(options: {
+  projectPath: string;
+  links: FeatureDefinition["links"];
+}): void {
+  const { projectPath, links } = options;
+  if (!links || links.length === 0) {
+    return;
+  }
+  for (const link of links) {
+    const outputPath = join(projectPath, link.path);
+    mkdirSync(dirname(outputPath), { recursive: true });
+    symlinkSync(normalizeLinkTarget(link.target), outputPath, link.type);
+  }
+}
+
+function collectFeatureLinks(
+  features: FeatureDefinition[],
+  reservedPaths: Set<string>,
+): FeatureDefinition["links"] {
+  const links: FeatureDefinition["links"] = [];
+  for (const feature of features) {
+    for (const link of feature.links ?? []) {
+      if (reservedPaths.has(link.path)) {
+        throw new Error(`Duplicate template path across features: ${link.path}`);
+      }
+      reservedPaths.add(link.path);
+      links.push({ ...link, target: normalizeLinkTarget(link.target) });
+    }
+  }
+  return links;
+}
+
+function collectFeaturePaths(feature: FeatureDefinition): string[] {
+  const linkPaths = feature.links?.map((link) => link.path) ?? [];
+  return [...feature.files, ...linkPaths];
+}
+
+function normalizeLinkTarget(target: string): string {
+  return normalize(target);
+}
+
+function pathExists(filePath: string): boolean {
+  try {
+    lstatSync(filePath);
+    return true;
+  } catch (error) {
+    const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : null;
+    if (code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 }

@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { extname, join } from "node:path";
+import { existsSync, lstatSync, readFileSync, readlinkSync, statSync } from "node:fs";
+import { extname, join, normalize } from "node:path";
 import { createTwoFilesPatch } from "diff";
 import type { FeatureDefinition, ProjectConfig } from "./config.js";
 import { loadFeature, loadProjects } from "./config.js";
@@ -64,6 +64,14 @@ export function collectCheckReport(options: {
     lines.push("```", "");
   }
 
+  if (feature.links && feature.links.length > 0) {
+    lines.push("## Template Links", "");
+    for (const link of feature.links) {
+      lines.push(`- ${link.path} -> ${link.target} (${link.type ?? "file"})`);
+    }
+    lines.push("");
+  }
+
   for (const project of selectedProjects) {
     lines.push(`## Project: ${project.name}`);
     lines.push(`Path: \`${project.path}\``);
@@ -109,6 +117,19 @@ export function collectCheckReport(options: {
         lines.push(projectContent);
         lines.push("```", "");
       }
+    }
+
+    if (feature.links && feature.links.length > 0) {
+      lines.push("### Links");
+      for (const link of feature.links) {
+        const linkPath = join(project.path, link.path);
+        const expected = normalize(link.target);
+        const status = readLinkStatus(linkPath, expected);
+        lines.push(`- ${link.path}`);
+        lines.push(`  - expected: ${link.target} (${link.type ?? "file"})`);
+        lines.push(`  - status: ${status}`);
+      }
+      lines.push("");
     }
   }
 
@@ -229,4 +250,31 @@ function renderTemplate(options: {
   return applyTemplateVars(templateContent, project.templateVars, {
     ignoredVariables: ignoredTemplateVariables,
   });
+}
+
+function readLinkStatus(linkPath: string, expectedTarget: string): string {
+  const info = safeLstat(linkPath);
+  if (!info) {
+    return "MISSING";
+  }
+  if (!info.isSymbolicLink()) {
+    return "NOT_A_SYMLINK";
+  }
+  const actualTarget = normalize(readlinkSync(linkPath));
+  if (actualTarget !== expectedTarget) {
+    return `TARGET_MISMATCH (actual: ${actualTarget})`;
+  }
+  return "OK";
+}
+
+function safeLstat(path: string) {
+  try {
+    return lstatSync(path);
+  } catch (error) {
+    const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : null;
+    if (code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
 }
