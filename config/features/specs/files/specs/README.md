@@ -7,7 +7,8 @@
 - [Implementation Plan Requirements](#implementation-plan-requirements)
 - [Reference Handling](#reference-handling)
 
-The INDEX of other specs and implementation plans is located in `specs/INDEX.md`.
+The INDEX of other specs and implementation plans is located in `specs/INDEX.md`. Add new specs and
+implementation plans to the INDEX as part of creating them.
 
 This repo uses specs and implementation plans to define and build features. The goal is to produce
 very detailed, living documents that guide implementation without constraining the order of work.
@@ -45,8 +46,11 @@ very detailed, living documents that guide implementation without constraining t
 ## Implementation Plan Requirements
 
 - Every spec must have a corresponding implementation plan.
+- Implementation plan files are named `impl-*`.
 - The plan is a list of tasks required to implement the spec.
+- At the top of the plan, explicitly reference the relevant spec(s).
 - Tasks must refer back to the spec.
+- Every task should reference the relevant spec section(s) it implements.
 - No phases. Do not group tasks into phases or impose an ordering.
 - Tasks should be as independent as possible. If a dependency exists, explicitly note it.
 - The plan describes what needs to be done, not the order it must be done in.
