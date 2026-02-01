@@ -187,7 +187,11 @@ export function run(argv: string[] = process.argv.slice(2)): void {
             writeFileSync(
               projectFile,
               `${JSON.stringify(
-                { name: projectName, path: projectPath, features: featureNames },
+                {
+                  name: projectName,
+                  path: projectPath,
+                  features: featureNames,
+                },
                 null,
                 2,
               )}\n`,
@@ -873,7 +877,10 @@ function ensureFeaturesExist(configRoot: string, featureNames: string[]) {
 function renderFeatureTemplates(options: {
   configRoot: string;
   features: ReturnType<typeof ensureFeaturesExist>;
-}): { files: { filePath: string; content: string }[]; links: FeatureDefinition["links"] } {
+}): {
+  files: { filePath: string; content: string }[];
+  links: FeatureDefinition["links"];
+} {
   const { configRoot, features } = options;
   const reservedPaths = new Set<string>();
   const renderedTemplates: { filePath: string; content: string }[] = [];
@@ -918,7 +925,10 @@ function renderFeatureTemplatesForProject(options: {
   configRoot: string;
   feature: ReturnType<typeof ensureFeaturesExist>[number];
   project: ReturnType<typeof loadProjects>[number];
-}): { files: { filePath: string; content: string }[]; links: FeatureDefinition["links"] } {
+}): {
+  files: { filePath: string; content: string }[];
+  links: FeatureDefinition["links"];
+} {
   const { configRoot, feature, project } = options;
   const renderedTemplates: { filePath: string; content: string }[] = [];
 

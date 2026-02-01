@@ -1,0 +1,8 @@
+{
+  "name": "review-mode",
+  "path": "/Users/wilco/dev/review-mode",
+  "templateVars": {
+    "NPM_SCOPE": "@rejot-dev"
+  },
+  "features": ["ai", "lint", "specs", "turbo", "tsconfig", "scripts"]
+}

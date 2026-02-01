@@ -72,7 +72,13 @@ describe("config loaders", () => {
           name: "lint",
           description: "Linting feature",
           files: ["alpha.txt"],
-          links: [{ path: "beta.txt", target: "../shared/beta.txt", type: "file" }],
+          links: [
+            {
+              path: "beta.txt",
+              target: "../shared/beta.txt",
+              type: "file",
+            },
+          ],
         },
         null,
         2,

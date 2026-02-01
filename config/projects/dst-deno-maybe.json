@@ -1,0 +1,8 @@
+{
+  "name": "dst-deno-maybe",
+  "path": "/Users/wilco/dev/dst-deno-maybe",
+  "templateVars": {
+    "NPM_SCOPE": "@wilco"
+  },
+  "features": ["specs"]
+}

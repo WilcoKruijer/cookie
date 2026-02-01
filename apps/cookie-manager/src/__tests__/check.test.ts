@@ -355,7 +355,13 @@ describe("collectCheckReport", () => {
           name: "links",
           description: "Linking feature",
           files: [],
-          links: [{ path: "linked.txt", target: "nested/../target.txt", type: "file" }],
+          links: [
+            {
+              path: "linked.txt",
+              target: "nested/../target.txt",
+              type: "file",
+            },
+          ],
         },
         null,
         2,
